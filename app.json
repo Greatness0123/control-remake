@@ -4,11 +4,12 @@
     "slug": "bells-attend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/bells-logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "hermes": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/bells-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,13 +18,19 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/bells-logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "bellsattend.apk"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/bells-logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2e8474c8-1184-4360-8d06-0562499530ed"
+      }
     }
   }
 }
