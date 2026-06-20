@@ -98,10 +98,29 @@ const FindBroadcastScreen = ({ navigation, route }) => {
       const q = query(collection(firestore, 'broadcasts'), where('isActive', '==', true));
       const snapshot = await getDocs(q);
 
-      const allBroadcasts = snapshot.docs.map((doc) => ({
+      const qNew = query(collection(firestore, 'attendanceSessions'), where('status', '==', 'active'));
+      const snapshotNew = await getDocs(qNew);
+
+      const oldBroadcasts = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
+        isNewSystem: false,
       }));
+
+      const newSessions = await Promise.all(snapshotNew.docs.map(async (docSnap) => {
+        const data = docSnap.data();
+        const courseDoc = await getDoc(doc(firestore, 'courses', data.courseId));
+        const courseData = courseDoc.exists() ? courseDoc.data() : { code: 'N/A', title: 'Unknown' };
+        return {
+          id: docSnap.id,
+          ...data,
+          customId: courseData.code,
+          teacherFullName: data.createdByRole === 'lecturer' ? 'Lecturer' : 'Course Rep',
+          isNewSystem: true,
+        };
+      }));
+
+      const allBroadcasts = [...oldBroadcasts, ...newSessions];
 
       // Map through all broadcasts and add distance/range info with cross-platform awareness
       const broadcastsWithRange = allBroadcasts.map((broadcast) => {
@@ -267,7 +286,34 @@ const FindBroadcastScreen = ({ navigation, route }) => {
         studentPlatform: getPlatformIdentifier(),
       };
 
-      await setDoc(doc(firestore, `broadcasts/${broadcastId}/participants`, user.uid), studentInfo);
+      if (broadcastData.isNewSystem) {
+        const inRange = broadcastData.inRange;
+        const accuracy = userLocation?.accuracy || 0;
+        const decision = inRange ? (accuracy > 50 ? 'allow_flagged' : 'allow') : 'reject';
+        const auditFlag = accuracy > 50 ? 'low_confidence_location' : null;
+
+        const checkInData = {
+          studentId: user.uid,
+          fullName: studentData.fullName || 'Unknown Student',
+          matricNumber: studentData.matricNumber || 'N/A',
+          timeSignedIn: Timestamp.now(),
+          coordinates: userLocation ? new GeoPoint(userLocation.latitude, userLocation.longitude) : null,
+          accuracy,
+          decision,
+          auditFlag,
+          studentPlatform: getPlatformIdentifier(),
+        };
+
+        await setDoc(doc(firestore, `attendanceSessions/${broadcastId}/checkIns`, user.uid), checkInData);
+
+        if (decision === 'reject') {
+          showAlert('Out of Range', 'Your check-in attempt was recorded but rejected because you are too far away.');
+          setJoining(false);
+          return;
+        }
+      } else {
+        await setDoc(doc(firestore, `broadcasts/${broadcastId}/participants`, user.uid), studentInfo);
+      }
       showAlert('Success', 'You have successfully joined the broadcast!');
       setTimeout(() => {
         navigation.reset({
