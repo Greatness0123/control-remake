@@ -6,7 +6,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SignUpScreen from './signup/index';
 import LoginScreen from './login/index';
 import TeacherDashboard from './lecturer'; 
+import TeacherCourseDetails from './lecturer/CourseDetailsScreen';
+import SessionDetails from './lecturer/SessionDetailsScreen';
+import CourseRepManagement from './lecturer/CourseRepManagementScreen';
 import StudentDashboard from './student'; 
+import RepCourseDetails from './student/RepCourseDetailsScreen';
+import StudentAttendanceHistory from './student/AttendanceHistoryScreen';
 import TeacherBroadcast from './lecturer/BroadcastScreen';
 import FindBroadcastScreen from './student/AvailableBroadcastScreen';
 import AdminScreen from './admin';
@@ -38,43 +43,20 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-        />
-        <Stack.Screen 
-          name="SignUp" 
-          component={SignUpScreen} 
-        />
-        <Stack.Screen 
-          name="TeacherScreen" 
-          component={TeacherDashboard} 
-        />
-        <Stack.Screen 
-          name="StudentScreen" 
-          component={StudentDashboard} 
-        />
-        <Stack.Screen 
-          name="TeacherBroadcastScreen" 
-          component={TeacherBroadcast} 
-        />
-        <Stack.Screen 
-          name="StudentBroadcastScreen" 
-          component={FindBroadcastScreen} 
-        />
-        <Stack.Screen 
-          name="AdminScreen" 
-          component={AdminScreen} 
-        />
-        <Stack.Screen 
-          name="QRCodeScanner" 
-          component={QRCodeScanner} 
-        />
-        <Stack.Screen 
-        name="ParticipantsView"
-         component={ParticipantsView} 
-         />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="TeacherScreen" component={TeacherDashboard} />
+        <Stack.Screen name="TeacherCourseDetails" component={TeacherCourseDetails} />
+        <Stack.Screen name="SessionDetails" component={SessionDetails} />
+        <Stack.Screen name="CourseRepManagement" component={CourseRepManagement} />
+        <Stack.Screen name="StudentScreen" component={StudentDashboard} />
+        <Stack.Screen name="RepCourseDetails" component={RepCourseDetails} />
+        <Stack.Screen name="StudentAttendanceHistory" component={StudentAttendanceHistory} />
+        <Stack.Screen name="TeacherBroadcastScreen" component={TeacherBroadcast} />
+        <Stack.Screen name="StudentBroadcastScreen" component={FindBroadcastScreen} />
+        <Stack.Screen name="AdminScreen" component={AdminScreen} />
+        <Stack.Screen name="QRCodeScanner" component={QRCodeScanner} />
+        <Stack.Screen name="ParticipantsView" component={ParticipantsView} />
       </Stack.Navigator>
     </NavigationContainer>
   );

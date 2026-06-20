@@ -4,7 +4,8 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isLecturer(lecturerId) { return isSignedIn() && request.auth.uid == lecturerId; }
     function hasActiveGrant(courseId, studentId, permission) {
-      let grant = get(/databases/$(database)/documents/courseRepGrants/$(courseId + "_" + studentId));
+      let grantId = courseId + "_" + studentId;
+      let grant = get(/databases/$(database)/documents/courseRepGrants/$(grantId));
       return grant != null && grant.data.status == 'active' && grant.data.permissions[permission] == true;
     }
 

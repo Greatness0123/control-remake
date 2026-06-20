@@ -1,0 +1,22 @@
+
+> bells-attend@1.0.0 web
+> expo start --web
+
+Starting project at /app
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@54.0.23 - expected version: ~54.0.35
+  expo-camera@17.0.9 - expected version: ~17.0.10
+  expo-location@19.0.7 - expected version: ~19.0.8
+  expo-notifications@0.32.12 - expected version: ~0.32.17
+  expo-print@15.0.7 - expected version: ~15.0.8
+  expo-sharing@14.0.7 - expected version: ~14.0.8
+  expo-status-bar@3.0.8 - expected version: ~3.0.9
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web ./index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+| [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+| [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Web Bundled 2037ms index.js (2457 modules)
+ LOG  [web] Logs will appear in the browser console

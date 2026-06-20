@@ -36,7 +36,7 @@ export const FluentButton = ({
         <ActivityIndicator color={isPrimary ? '#fff' : FluentTheme.colors.accent} />
       ) : (
         <>
-          {Icon && <Icon size={size === 'small' ? 16 : 20} color={isPrimary ? '#fff' : (variant === 'outline' || variant === 'ghost' ? FluentTheme.colors.accent : FluentTheme.colors.neutralText)} style={{ marginRight: 8 }} />}
+          {Icon && <Icon size={size === 'small' ? 16 : 20} color={isPrimary ? '#fff' : FluentTheme.colors.accent} style={{ marginRight: 8 }} />}
           <Text style={[
             styles.text,
             isPrimary && styles.textPrimary,

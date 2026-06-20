@@ -1,664 +1,225 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, RefreshControl, ScrollView, FlatList, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  ActivityIndicator,
+  Alert
+} from 'react-native';
 import { auth, firestore } from '../../config/firebaseconfig';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
-import { Platform } from 'react-native';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  doc,
+  updateDoc,
+  Timestamp,
+  onSnapshot
+} from 'firebase/firestore';
+import { FluentTheme } from '../components/theme';
+import { FluentText } from '../components/FluentText';
+import { FluentButton } from '../components/FluentButton';
+import { FluentCard } from '../components/FluentCard';
+import { FluentLayoutShell } from '../components/FluentLayoutShell';
+import {
+  LogOut,
+  User,
+  BookOpen,
+  ShieldCheck,
+  History,
+  ChevronRight,
+  Bell
+} from 'lucide-react-native';
 
-const StudentDashboard = ({ navigation, route }) => {
+const StudentDashboard = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [updatedData, setUpdatedData] = useState({});
-  const [refreshing, setRefreshing] = useState(false);
-  const [pastBroadcasts, setPastBroadcasts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState('');
+  const [grants, setGrants] = useState([]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const userDoc = await getDoc(doc(firestore, 'students', user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setUserData(data);
-            setUpdatedData(data);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch user data:', error);
-      } finally {
-        setLoading(false);
-      }
+    fetchData();
+    const unsubscribeGrants = subscribeToGrants();
+    return () => {
+      if (unsubscribeGrants) unsubscribeGrants();
     };
-
-    fetchUserData();
   }, []);
 
-  useEffect(() => {
-    const fetchPastBroadcasts = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const broadcastsSnapshot = await getDocs(collection(firestore, 'broadcasts'));
-          const broadcasts = [];
-
-          for (const broadcastDoc of broadcastsSnapshot.docs) {
-            const participantsSnapshot = await getDocs(collection(firestore, `broadcasts/${broadcastDoc.id}/participants`));
-            const participantDoc = participantsSnapshot.docs.find(doc => doc.id === user.uid);
-
-            if (participantDoc) {
-              const broadcastData = broadcastDoc.data();
-              const participantData = participantDoc.data();
-              broadcasts.push({
-                id: broadcastDoc.id,
-                customId: broadcastData.customId || broadcastDoc.id,
-                teacherFullName: broadcastData.teacherFullName || 'Unknown',
-                joinedAt: participantData.timeSignedIn?.toDate() || 'N/A',
-              });
-            }
-          }
-
-          setPastBroadcasts(broadcasts);
-        }
-      } catch (error) {
-        console.error('Failed to fetch past broadcasts:', error);
-      }
-    };
-
-    fetchPastBroadcasts();
-  }, []);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
+  const fetchData = async () => {
+    setLoading(true);
     try {
       const user = auth.currentUser;
-      if (user) {
-        const userDoc = await getDoc(doc(firestore, 'students', user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserData(data);
-          setUpdatedData(data);
-        }
+      if (!user) return;
 
-        const broadcastsSnapshot = await getDocs(collection(firestore, 'broadcasts'));
-        const broadcasts = [];
-
-        for (const broadcastDoc of broadcastsSnapshot.docs) {
-          const participantsSnapshot = await getDocs(collection(firestore, `broadcasts/${broadcastDoc.id}/participants`));
-          const participantDoc = participantsSnapshot.docs.find(doc => doc.id === user.uid);
-
-          if (participantDoc) {
-            const broadcastData = broadcastDoc.data();
-            const participantData = participantDoc.data();
-            broadcasts.push({
-              id: broadcastDoc.id,
-              customId: broadcastData.customId || broadcastDoc.id,
-              teacherFullName: broadcastData.teacherFullName || 'Unknown',
-              joinedAt: participantData.timeSignedIn?.toDate() || 'N/A',
-            });
-          }
-        }
-
-        setPastBroadcasts(broadcasts);
-      }
+      const studentDoc = await getDoc(doc(firestore, 'students', user.uid));
+      if (studentDoc.exists()) setUserData(studentDoc.data());
     } catch (error) {
-      console.error('Failed to refresh data:', error);
+      console.error('Error fetching student data:', error);
     } finally {
-      setRefreshing(false);
+      setLoading(false);
+    }
+  };
+
+  const subscribeToGrants = () => {
+    const user = auth.currentUser;
+    if (!user) return null;
+
+    const q = query(collection(firestore, 'courseRepGrants'), where('repStudentId', '==', user.uid));
+
+    return onSnapshot(q, async (snapshot) => {
+      const grantsData = await Promise.all(snapshot.docs.map(async (grantDoc) => {
+        const data = grantDoc.data();
+        const courseDoc = await getDoc(doc(firestore, 'courses', data.courseId));
+        const lecturerDoc = await getDoc(doc(firestore, 'teachers', data.lecturerId));
+
+        return {
+          id: grantDoc.id,
+          ...data,
+          courseCode: courseDoc.exists() ? courseDoc.data().code : 'N/A',
+          courseTitle: courseDoc.exists() ? courseDoc.data().title : 'Unknown Course',
+          lecturerName: lecturerDoc.exists() ? lecturerDoc.data().fullName : 'Unknown Lecturer'
+        };
+      }));
+      setGrants(grantsData);
+    });
+  };
+
+  const handleAcceptInvite = async (grantId) => {
+    try {
+      await updateDoc(doc(firestore, 'courseRepGrants', grantId), {
+        status: 'active',
+        acceptedAt: Timestamp.now()
+      });
+      Alert.alert('Success', 'You are now a Course Rep!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to accept invite');
+    }
+  };
+
+  const handleDeclineInvite = async (grantId) => {
+    try {
+      await updateDoc(doc(firestore, 'courseRepGrants', grantId), {
+        status: 'revoked',
+        revokedAt: Timestamp.now()
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to decline invite');
     }
   };
 
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch (error) {
       console.error('Logout failed:', error);
     }
   };
 
-  const handleBroadcastScreen = async () => {
-    try {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'StudentBroadcastScreen' }],
-      });
-    } catch (error) {
-      console.error('Routing failed:', error);
-    }
-  };
+  if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={FluentTheme.colors.accent} /></View>;
 
-  const handleUpdate = async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        await updateDoc(doc(firestore, 'students', user.uid), updatedData);
-        setUserData(updatedData);
-        setEditing(false);
-        Alert.alert(
-          'Success',
-          'Your information has been updated. Note: Updates will be applied in 3 days.'
-        );
-      }
-    } catch (error) {
-      console.error('Failed to update user data:', error);
-      Alert.alert('Error', 'Failed to update your information.');
-    }
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-      </View>
-    );
-  }
+  const pendingInvites = grants.filter(g => g.status === 'pending');
+  const activeGrants = grants.filter(g => g.status === 'active');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <View style={styles.container}>
-        <ScrollView
-          style={styles.scrollContainer}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b82f6"]} />}
-        >
-          <View style={styles.headerContainer}>
-            <Text style={styles.title}>Student Dashboard</Text>
-            <View style={styles.topIconsContainer}>
-              <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
-                <Ionicons name="log-out-outline" size={24} color="#ef4444" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.profileIcon}>
-                <Ionicons name="person-circle-outline" size={24} color="#3b82f6" />
-              </TouchableOpacity>
-            </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <FluentLayoutShell variant="wide">
+        <View style={styles.header}>
+          <View>
+            <FluentText variant="header" weight="bold">BellsAttend+</FluentText>
+            <FluentText variant="body" color="neutralTextSecondary">Student Portal</FluentText>
           </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+            <LogOut color={FluentTheme.colors.error} size={22} />
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.welcomeSection}>
-            {userData?.fullName && (
-              <Text style={styles.welcomeText}>
-                Welcome, <Text style={styles.nameText}>{userData.fullName}</Text>
-              </Text>
-            )}
-            
-            <View style={styles.statsContainer}>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>{pastBroadcasts.length}</Text>
-                <Text style={styles.statLabel}>Total Sessions</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statNumber}>
-                  {pastBroadcasts.filter(b => b.joinedAt !== 'N/A').length}
-                </Text>
-                <Text style={styles.statLabel}>Attended</Text>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <FluentCard style={styles.profileCard}>
+            <View style={styles.profileInfo}>
+              <View style={styles.avatar}><User color={FluentTheme.colors.accent} size={32} /></View>
+              <View>
+                <FluentText variant="title" weight="semibold">{userData?.fullName || 'Student'}</FluentText>
+                <FluentText variant="caption" color="neutralTextSecondary">{userData?.matricNumber}</FluentText>
               </View>
             </View>
-          </View>
+          </FluentCard>
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Attendance History</Text>
-          </View>
-
-          {pastBroadcasts.length === 0 ? (
-            <View style={styles.noBroadcastsContainer}>
-              <Ionicons name="document-text-outline" size={48} color="#cbd5e1" />
-              <Text style={styles.noBroadcastsText}>No attendance records yet</Text>
-              <Text style={styles.noBroadcastsSubtext}>Join available broadcasts to see your history</Text>
-            </View>
-          ) : (
-            <View style={styles.broadcastsList}>
-              {pastBroadcasts.map((item) => {
-                const dateTime = item.joinedAt?.toLocaleString() || 'N/A';
-                const [date, time] = dateTime.split(', ');
-                return (
-                  <View key={item.id} style={styles.broadcastItem}>
-                    <View style={styles.broadcastHeader}>
-                      <View style={styles.broadcastInfo}>
-                        <Text style={styles.courseText}>{item.customId}</Text>
-                        <Text style={styles.broadcastSubtext}>
-                          <Ionicons name="person-outline" size={14} color="#64748b" />
-                          <Text style={styles.lecturerText}> {item.teacherFullName}</Text>
-                        </Text>
-                      </View>
-                      <View style={styles.statusBadge}>
-                        <Text style={styles.statusText}>Completed</Text>
-                      </View>
-                    </View>
-                    
-                    <View style={styles.broadcastDetails}>
-                      <Text style={styles.broadcastDateTime}>
-                        <Ionicons name="calendar-outline" size={14} color="#3b82f6" />
-                        <Text style={styles.dateText}> {date}</Text>
-                        <Text style={styles.timeText}> {time}</Text>
-                      </Text>
-                    </View>
+          {pendingInvites.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Bell size={18} color={FluentTheme.colors.warning} />
+                <FluentText variant="subtitle" weight="bold" style={{ marginLeft: 8 }}>Pending Rep Invites</FluentText>
+              </View>
+              {pendingInvites.map(invite => (
+                <FluentCard key={invite.id} style={styles.inviteCard}>
+                  <FluentText variant="body" weight="semibold">{invite.courseCode}: {invite.courseTitle}</FluentText>
+                  <FluentText variant="caption" color="neutralTextSecondary">Invited by: {invite.lecturerName}</FluentText>
+                  <View style={styles.inviteActions}>
+                    <FluentButton title="Decline" variant="ghost" size="small" onPress={() => handleDeclineInvite(invite.id)} style={{ flex: 1, marginRight: 8 }} />
+                    <FluentButton title="Accept" variant="primary" size="small" onPress={() => handleAcceptInvite(invite.id)} style={{ flex: 1 }} />
                   </View>
-                );
-              })}
+                </FluentCard>
+              ))}
             </View>
           )}
-        </ScrollView>
 
-        <TouchableOpacity onPress={handleBroadcastScreen} style={styles.floatingButton}>
-          <Ionicons name="search" size={24} color="#ffffff" />
-        </TouchableOpacity>
-
-        {/* Profile Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Profile</Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)}>
-                  <Ionicons name="close-outline" size={24} color="#64748b" />
-                </TouchableOpacity>
+          {activeGrants.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <ShieldCheck size={18} color={FluentTheme.colors.accent} />
+                <FluentText variant="subtitle" weight="bold" style={{ marginLeft: 8 }}>Course Rep Access</FluentText>
               </View>
-              
-              {editing ? (
-                <View style={styles.editSection}>
-                  <TouchableOpacity onPress={() => setEditing(false)} style={styles.backArrow}>
-                    <Ionicons name="arrow-back" size={24} color="#3b82f6" />
-                  </TouchableOpacity>
-                  
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Full Name</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={updatedData.fullName}
-                      onChangeText={(text) => setUpdatedData({ ...updatedData, fullName: text })}
-                      placeholder="Full Name"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Matric Number</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={updatedData.matricNumber}
-                      onChangeText={(text) => setUpdatedData({ ...updatedData, matricNumber: text })}
-                      placeholder="Matric Number"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Department</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={updatedData.department}
-                      onChangeText={(text) => setUpdatedData({ ...updatedData, department: text })}
-                      placeholder="Department"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>College</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={updatedData.college}
-                      onChangeText={(text) => setUpdatedData({ ...updatedData, college: text })}
-                      placeholder="College"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Current Level</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={updatedData.currentLevel}
-                      onChangeText={(text) => setUpdatedData({ ...updatedData, currentLevel: text })}
-                      placeholder="Current Level"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-
-                  <Text style={styles.noteText}>Note: Updates will be applied in 3 days.</Text>
-                  
-                  <TouchableOpacity onPress={handleUpdate} style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.viewSection}>
-                  <View style={styles.infoCard}>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Name</Text>
-                      <Text style={styles.infoValue}>{userData?.fullName}</Text>
+              {activeGrants.map(grant => (
+                <TouchableOpacity key={grant.id} onPress={() => navigation.navigate('RepCourseDetails', { courseId: grant.courseId, grantId: grant.id })}>
+                  <FluentCard style={styles.grantCard}>
+                    <View style={styles.grantInfo}>
+                      <View style={{ flex: 1 }}>
+                        <FluentText variant="body" weight="semibold">{grant.courseCode}</FluentText>
+                        <FluentText variant="caption" color="neutralTextSecondary">{grant.courseTitle}</FluentText>
+                      </View>
+                      <ChevronRight size={20} color={FluentTheme.colors.neutralBorderStrong} />
                     </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Matric Number</Text>
-                      <Text style={styles.infoValue}>{userData?.matricNumber}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Department</Text>
-                      <Text style={styles.infoValue}>{userData?.department}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>College</Text>
-                      <Text style={styles.infoValue}>{userData?.college}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Current Level</Text>
-                      <Text style={styles.infoValue}>{userData?.currentLevel}</Text>
-                    </View>
-                  </View>
-                  
-                  <TouchableOpacity onPress={() => setEditing(true)} style={styles.editButton}>
-                    <Ionicons name="create-outline" size={18} color="#ffffff" />
-                    <Text style={styles.editButtonText}>Edit Profile</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                  </FluentCard>
+                </TouchableOpacity>
+              ))}
             </View>
+          )}
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <History size={18} color={FluentTheme.colors.neutralText} />
+              <FluentText variant="subtitle" weight="bold" style={{ marginLeft: 8 }}>Your Attendance</FluentText>
+            </View>
+            <FluentButton title="Join Attendance Broadcast" variant="primary" icon={BookOpen} onPress={() => navigation.navigate('StudentBroadcastScreen')} style={{ marginBottom: 16 }} />
+            <FluentButton title="View Attendance History" variant="outline" icon={History} onPress={() => navigation.navigate('StudentAttendanceHistory')} />
           </View>
-        </Modal>
-      </View>
+        </ScrollView>
+      </FluentLayoutShell>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    paddingTop: 40,
-    paddingBottom: 40,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  topIconsContainer: {
-    flexDirection: 'row',
-  },
-  logoutIcon: {
-    marginRight: 16,
-  },
-  profileIcon: {
-    marginRight: 0,
-  },
-  welcomeSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  welcomeText: {
-    fontSize: 18,
-    color: '#64748b',
-    marginBottom: 16,
-  },
-  nameText: {
-    fontWeight: '600',
-    color: '#3b82f6',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#f1f5f9',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#3b82f6',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 4,
-  },
-  sectionHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  noBroadcastsContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-  },
-  noBroadcastsText: {
-    fontSize: 16,
-    color: '#64748b',
-    marginTop: 12,
-  },
-  noBroadcastsSubtext: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  broadcastsList: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  broadcastItem: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  broadcastHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  broadcastInfo: {
-    flex: 1,
-  },
-  courseText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  broadcastSubtext: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lecturerText: {
-    fontSize: 14,
-    color: '#64748b',
-    marginLeft: 4,
-  },
-  statusBadge: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statusText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  broadcastDetails: {
-    marginTop: 8,
-  },
-  broadcastDateTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#64748b',
-    marginLeft: 4,
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#3b82f6',
-    fontWeight: '500',
-    marginLeft: 4,
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    backgroundColor: '#3b82f6',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
-    width: '90%',
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  editSection: {
-    width: '100%',
-  },
-  backArrow: {
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1e293b',
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#1e293b',
-    backgroundColor: '#f8fafc',
-  },
-  noteText: {
-    fontSize: 12,
-    color: '#f59e0b',
-    marginBottom: 16,
-  },
-  saveButton: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  viewSection: {
-    width: '100%',
-  },
-  infoCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#1e293b',
-    fontWeight: '600',
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#3b82f6',
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  editButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: FluentTheme.colors.neutralLayer },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: FluentTheme.colors.white, borderBottomWidth: 1, borderBottomColor: FluentTheme.colors.neutralBorder },
+  iconButton: { padding: 8 },
+  scrollContent: { padding: 20 },
+  profileCard: { marginBottom: 24 },
+  profileInfo: { flexDirection: 'row', alignItems: 'center' },
+  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: FluentTheme.colors.neutralBackground2, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  section: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  inviteCard: { marginBottom: 12, borderLeftWidth: 4, borderLeftColor: FluentTheme.colors.warning },
+  inviteActions: { flexDirection: 'row', marginTop: 12 },
+  grantCard: { marginBottom: 12 },
+  grantInfo: { flexDirection: 'row', alignItems: 'center' }
 });
 
 export default StudentDashboard;
