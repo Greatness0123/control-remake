@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isLecturer(lecturerId) { return isSignedIn() && request.auth.uid == lecturerId; }
+    function hasActiveGrant(courseId, studentId, permission) {
+      let grant = get(/databases/$(database)/documents/courseRepGrants/$(courseId + "_" + studentId));
+      return grant != null && grant.data.status == 'active' && grant.data.permissions[permission] == true;
+    }
+
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isLecturer(request.resource.data.lecturerId);
+    }
+
+    match /courseRepGrants/{grantId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.lecturerId || request.auth.uid == resource.data.repStudentId);
+      allow create: if isLecturer(request.resource.data.lecturerId);
+      allow update: if isLecturer(resource.data.lecturerId);
+      allow delete: if false;
+    }
+
+    match /attendanceSessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (isLecturer(request.resource.data.createdBy) || hasActiveGrant(request.resource.data.courseId, request.auth.uid, 'takeAttendance'));
+      allow update, delete: if isSignedIn() && (isLecturer(get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.lecturerId) || hasActiveGrant(resource.data.courseId, request.auth.uid, 'manageSessions'));
+
+      match /checkIns/{studentId} {
+        allow read: if isSignedIn() && (request.auth.uid == studentId || isLecturer(get(/databases/$(database)/documents/courses/$(get(/databases/$(database)/documents/attendanceSessions/$(sessionId)).data.courseId)).data.lecturerId) || hasActiveGrant(get(/databases/$(database)/documents/attendanceSessions/$(sessionId)).data.courseId, request.auth.uid, 'takeAttendance'));
+        allow create: if isSignedIn() && request.auth.uid == studentId;
+        allow update, delete: if false;
+      }
+    }
+
+    match /repActivityLog/{logId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.repId || isLecturer(get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.lecturerId));
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.repId;
+      allow update, delete: if false;
+    }
+
+    match /students/{studentId} { allow read: if isSignedIn(); allow write: if isSignedIn() && request.auth.uid == studentId; }
+    match /teachers/{teacherId} { allow read: if isSignedIn(); allow write: if isSignedIn() && request.auth.uid == teacherId; }
+    match /broadcasts/{broadcastId} { allow read: if isSignedIn(); allow write: if isSignedIn(); match /participants/{participantId} { allow read, write: if isSignedIn(); } }
+  }
+}

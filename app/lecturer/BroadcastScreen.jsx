@@ -211,15 +211,7 @@ const LecturerBroadcast = ({ navigation, route }) => {
       const teacherDoc = await getDoc(doc(firestore, 'teachers', user.uid));
       const teacherFullName = teacherDoc.exists() ? teacherDoc.data()?.fullName || 'Unknown' : 'Unknown';
 
-      const broadcastData = {
-        teacherId: user.uid,
-        teacherFullName,
-        isActive: true,
-        createdAt: Timestamp.now(),
-        customId: customBroadcastId.trim().toUpperCase(),
-        useLocation: useLocation,
-        broadcasterPlatform: getPlatformIdentifier(),
-      };
+      const { courseId, isRep } = route.params || {};
 
       if (courseIdParam) {
         broadcastData.courseId = courseIdParam;
@@ -230,11 +222,54 @@ const LecturerBroadcast = ({ navigation, route }) => {
       if (useLocation && location) {
         broadcastData.radiusMeters = radiusMeters;
         broadcastData.coordinates = new GeoPoint(location.latitude, location.longitude);
+      if (courseId) {
+        const sessionData = {
+          courseId,
+          createdBy: user.uid,
+          createdByRole: isRep ? 'rep' : 'lecturer',
+          sessionName: customBroadcastId.trim() || new Date().toLocaleDateString(),
+          startedAt: Timestamp.now(),
+          endedAt: null,
+          radiusMeters: useLocation ? radiusMeters : 0,
+          status: 'active',
+          useLocation: useLocation,
+          broadcasterPlatform: getPlatformIdentifier(),
+        };
+
+        if (useLocation && location) {
+          sessionData.coordinates = new GeoPoint(location.latitude, location.longitude);
+        }
+
+        await addDoc(collection(firestore, 'attendanceSessions'), sessionData);
+
+        if (isRep) {
+          await addDoc(collection(firestore, 'repActivityLog'), {
+            courseId,
+            repId: user.uid,
+            action: 'session_started',
+            createdAt: Timestamp.now(),
+          });
+        }
+      } else {
+        const broadcastData = {
+          teacherId: user.uid,
+          teacherFullName,
+          isActive: true,
+          createdAt: Timestamp.now(),
+          customId: customBroadcastId.trim().toUpperCase(),
+          useLocation: useLocation,
+          broadcasterPlatform: getPlatformIdentifier(),
+        };
+
+        if (useLocation && location) {
+          broadcastData.radiusMeters = radiusMeters;
+          broadcastData.coordinates = new GeoPoint(location.latitude, location.longitude);
+        }
+
+        await addDoc(collection(firestore, 'broadcasts'), broadcastData);
       }
 
-      await addDoc(collection(firestore, 'broadcasts'), broadcastData);
-
-      Alert.alert('Success', `Broadcast started!\nBroadcast ID: ${customBroadcastId.trim().toUpperCase()}\nBroadcaster: ${getPlatformIdentifier()}`);
+      Alert.alert('Success', `Attendance started!\nID: ${customBroadcastId.trim().toUpperCase()}\nBroadcaster: ${getPlatformIdentifier()}`);
       sendNotification('Broadcast Started', `Broadcast "${customBroadcastId.trim().toUpperCase()}" has started.`);
       setCustomBroadcastId('');
       fetchTeacherBroadcasts();
