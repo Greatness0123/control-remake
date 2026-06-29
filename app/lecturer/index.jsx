@@ -253,7 +253,7 @@ const LecturerDashboard = ({ navigation }) => {
       `;
 
       // Generate PDF
-      const { uri } = await Print.printToFileAsync({ pdfhtml });
+      const { uri } = await Print.printToFileAsync({ html: pdfhtml });
       
       // Share the PDF
       await Sharing.shareAsync(uri, {
@@ -483,7 +483,7 @@ const LecturerDashboard = ({ navigation }) => {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b82f6"]} />}
         >
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>Lecturer Dashboard</Text>
+            <Text style={styles.title} numberOfLines={1}>Welcome, {lecturerData?.fullName || 'Lecturer'}</Text>
             <View style={styles.topIconsContainer}>
               <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
                 <Ionicons name="log-out-outline" size={24} color="#ef4444" />
@@ -495,7 +495,6 @@ const LecturerDashboard = ({ navigation }) => {
           </View>
 
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeText}>Welcome, {lecturerData?.fullName || 'Lecturer'}</Text>
             <View style={styles.statsContainer}>
               <View style={styles.statCard}>
                 <Text style={styles.statNumber}>{broadcasts.length}</Text>
@@ -542,103 +541,6 @@ const LecturerDashboard = ({ navigation }) => {
             </ScrollView>
           )}
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Past Attendance Records</Text>
-            <TouchableOpacity style={styles.reportButton} onPress={generateGeneralReport}>
-              <Ionicons name="bar-chart-outline" size={20} color="#ffffff" />
-              <Text style={styles.reportButtonText}>Report</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {broadcasts.length === 0 ? (
-            <View style={styles.noBroadcastsContainer}>
-              <Ionicons name="document-text-outline" size={48} color="#cbd5e1" />
-              <Text style={styles.noBroadcastsText}>No past attendance records</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={broadcasts}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => {
-                const dateTime = item.createdAt?.toDate().toLocaleString() || 'N/A';
-                const [date, time] = dateTime.split(', ');
-                return (
-                  <TouchableOpacity 
-                    style={styles.broadcastItem}
-                    onPress={() => viewParticipants(item)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.broadcastHeader}>
-                      <View style={styles.broadcastInfo}>
-                        <Text style={styles.courseText}>{item.customId || 'N/A'}</Text>
-                        <Text style={styles.broadcastSubtext}>
-                          <Ionicons name="calendar-outline" size={14} color="#64748b" />
-                          <Text style={styles.dateText}> {date}</Text>
-                          <Text style={styles.timeText}> {time}</Text>
-                        </Text>
-                      </View>
-                      <View style={[
-                        styles.statusBadge,
-                        { backgroundColor: item.isActive ? '#10b981' : '#f59e0b' }
-                      ]}>
-                        <Text style={styles.statusText}>{item.isActive ? 'Active' : 'Ended'}</Text>
-                      </View>
-                    </View>
-                    
-                    <View style={styles.broadcastStats}>
-                      <View style={styles.statItem}>
-                        <Ionicons name="people-outline" size={16} color="#3b82f6" />
-                        <Text style={styles.statItemText}>{item.participantCount || 0} Participants</Text>
-                      </View>
-                    </View>
-                    
-                    <View style={styles.actionButtonsContainer}>
-                      <TouchableOpacity 
-                        style={styles.actionButton} 
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          exportToPDF(item.id);
-                        }}
-                      >
-                        <Ionicons name="download-outline" size={18} color="#3b82f6" />
-                        <Text style={styles.actionButtonText}>PDF</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={styles.actionButton} 
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          generateQRCode(item);
-                        }}
-                      >
-                        <Ionicons name="qr-code-outline" size={18} color="#10b981" />
-                        <Text style={styles.actionButtonText}>QR</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={styles.actionButton} 
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          setSelectedBroadcastId(item.id);
-                          setAddStudentModalVisible(true);
-                        }}
-                      >
-                        <Ionicons name="person-add-outline" size={18} color="#f59e0b" />
-                        <Text style={styles.actionButtonText}>Add</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={styles.deleteButton} 
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          confirmDeleteBroadcast(item.id);
-                        }}
-                      >
-                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                      </TouchableOpacity>
-                    </View>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          )}
         </ScrollView>
 
        
@@ -648,16 +550,6 @@ const LecturerDashboard = ({ navigation }) => {
         >
           <Ionicons name="search-outline" size={24} color="#ffffff" />
         </TouchableOpacity>
-
-       
-        <View
-          style={[styles.locationButton]}
-          {...panResponder.panHandlers}
-        >
-          <TouchableOpacity onPress={() => navigation.navigate('TeacherBroadcastScreen')}>
-            <Ionicons name="location-outline" size={24} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
 
         
         <Modal
@@ -898,9 +790,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     paddingBottom: 40,
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
+    width: '100%',
+    maxWidth: 800,
   },
   loadingContainer: {
     flex: 1,
@@ -917,9 +812,10 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1e293b',
+    flex: 1,
   },
   topIconsContainer: {
     flexDirection: 'row',

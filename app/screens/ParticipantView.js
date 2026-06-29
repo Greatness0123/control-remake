@@ -19,6 +19,32 @@ const ParticipantsView = ({ navigation, route }) => {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [matricNumber, setMatricNumber] = useState('');
   const [adding, setAdding] = useState(false);
+  const [expandedCards, setExpandedCards] = useState({});
+  const [currentUserName, setCurrentUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        const collectionName = userRole === 'rep' ? 'students' : 'teachers';
+        const userDoc = await getDoc(doc(firestore, collectionName, user.uid));
+        if (userDoc.exists()) {
+          setCurrentUserName(userDoc.data().fullName);
+        }
+      } catch (e) {
+        console.error("Error fetching user name:", e);
+      }
+    };
+    fetchUserName();
+  }, [userRole]);
+
+  const toggleCard = (id) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -124,7 +150,7 @@ const ParticipantsView = ({ navigation, route }) => {
         addedByLecturer: userRole === 'lecturer',
         addedByRep: userRole === 'rep',
         addedBy: userId,
-        addedByName: userRole === 'lecturer' ? 'Lecturer' : 'Course Rep',
+        addedByName: currentUserName || (userRole === 'lecturer' ? 'Lecturer' : 'Course Rep'),
         addedByRole: userRole,
         studentPlatform: 'MANUAL_ADD',
       });
@@ -167,65 +193,88 @@ const ParticipantsView = ({ navigation, route }) => {
   const renderParticipantItem = ({ item, index }) => {
     const timeSignedIn = item.timeSignedIn?.toDate().toLocaleString() || 'N/A';
     const [date, time] = timeSignedIn.split(', ');
+    const isExpanded = expandedCards[item.id];
 
     return (
       <View style={styles.participantCard}>
-        <View style={styles.participantHeader}>
-          <View style={styles.participantNumber}>
-            <Text style={styles.participantNumberText}>{index + 1}</Text>
-          </View>
-          <View style={styles.participantMainInfo}>
-            <Text style={styles.participantName}>{item.fullName || 'N/A'}</Text>
-            <Text style={styles.participantMatric}>{item.matricNumber || 'N/A'}</Text>
-          </View>
-          {item.addedByLecturer && (
-            <View style={styles.manualBadge}>
-              <Ionicons name="person-add" size={12} color={fluentColors.warning} />
-              <Text style={styles.manualBadgeText}>Manual</Text>
+        <View style={styles.participantHeaderRow}>
+          <TouchableOpacity
+            style={styles.participantMainArea}
+            onPress={() => toggleCard(item.id)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.participantNumber}>
+              <Text style={styles.participantNumberText}>{index + 1}</Text>
             </View>
-          )}
-          {item.addedByRep && (
-            <View style={styles.repBadge}>
-              <Ionicons name="people" size={12} color={fluentColors.purple} />
-              <Text style={styles.repBadgeText}>Rep Added</Text>
+            <View style={styles.participantMainInfo}>
+              <Text style={styles.participantName}>{item.fullName || 'N/A'}</Text>
+              <Text style={styles.participantMatric}>{item.matricNumber || 'N/A'}</Text>
             </View>
-          )}
-          {canEdit && (
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => removeParticipant(item.id, item.fullName)}
-            >
-              <Ionicons name="close-circle" size={22} color={fluentColors.danger} />
+            <View style={styles.headerBadges}>
+              {item.addedByLecturer && (
+                <View style={styles.manualBadge}>
+                  <Ionicons name="person-add" size={12} color={fluentColors.warning} />
+                  <Text style={styles.manualBadgeText}>Manual</Text>
+                </View>
+              )}
+              {item.addedByRep && (
+                <View style={styles.repBadge}>
+                  <Ionicons name="people" size={12} color={fluentColors.purple} />
+                  <Text style={styles.repBadgeText}>Rep Added</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.participantActions}>
+            {canEdit && (
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => removeParticipant(item.id, item.fullName)}
+              >
+                <Ionicons name="close-circle" size={26} color={fluentColors.danger} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => toggleCard(item.id)} style={{ padding: 4 }}>
+              <Ionicons
+                name={isExpanded ? "chevron-up" : "chevron-down"}
+                size={22}
+                color={fluentColors.neutralSecondary}
+              />
             </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.participantDetails}>
-          <View style={styles.detailRow}>
-            <Ionicons name="school-outline" size={16} color={fluentColors.neutralSecondary} />
-            <Text style={styles.detailText}>{item.college || 'N/A'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Ionicons name="book-outline" size={16} color={fluentColors.neutralSecondary} />
-            <Text style={styles.detailText}>{item.department || 'N/A'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Ionicons name="ribbon-outline" size={16} color={fluentColors.neutralSecondary} />
-            <Text style={styles.detailText}>Level {item.currentLevel || 'N/A'}</Text>
           </View>
         </View>
 
-        <View style={styles.timeInfo}>
-          <Ionicons name="time-outline" size={14} color={fluentColors.brand} />
-          <Text style={styles.timeText}>Signed in: {date} at {time}</Text>
-        </View>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <View style={styles.participantDetails}>
+              <View style={styles.detailRow}>
+                <Ionicons name="school-outline" size={16} color={fluentColors.neutralSecondary} />
+                <Text style={styles.detailText}>{item.college || 'N/A'}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Ionicons name="book-outline" size={16} color={fluentColors.neutralSecondary} />
+                <Text style={styles.detailText}>{item.department || 'N/A'}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Ionicons name="ribbon-outline" size={16} color={fluentColors.neutralSecondary} />
+                <Text style={styles.detailText}>Level {item.currentLevel || 'N/A'}</Text>
+              </View>
+            </View>
 
-        {item.addedBy && (
-          <View style={styles.addedByInfo}>
-            <Ionicons name="person-outline" size={12} color={fluentColors.neutralTertiary} />
-            <Text style={styles.addedByText}>
-              Added by: {item.addedByName} ({item.addedByRole})
-            </Text>
+            <View style={styles.timeInfo}>
+              <Ionicons name="time-outline" size={14} color={fluentColors.brand} />
+              <Text style={styles.timeText}>Signed in: {date} at {time}</Text>
+            </View>
+
+            {item.addedBy && (
+              <View style={styles.addedByInfo}>
+                <Ionicons name="person-outline" size={12} color={fluentColors.neutralTertiary} />
+                <Text style={styles.addedByText}>
+                  Added by: {item.addedByName} ({item.addedByRole})
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -374,7 +423,27 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.white },
+  container: { flex: 1, backgroundColor: fluentColors.white, alignItems: 'center' },
+  header: {
+    width: '100%',
+    maxWidth: 800,
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16,
+    borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
+  },
+  statsBar: {
+    width: '100%',
+    maxWidth: 800,
+    flexDirection: 'row', backgroundColor: fluentColors.neutralLightest, paddingVertical: 16,
+    paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
+  },
+  searchContainer: {
+    width: '100%',
+    maxWidth: 800,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: fluentColors.neutralLightest,
+    marginHorizontal: 20, marginVertical: 16, paddingHorizontal: 12, paddingVertical: 10,
+    borderRadius: fluentRadius.m, borderWidth: 1, borderColor: fluentColors.neutralLighter,
+  },
+  listContainer: { width: '100%', maxWidth: 800, paddingHorizontal: 20, paddingBottom: 20 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 16, color: fluentColors.neutralSecondary },
   header: {
@@ -406,9 +475,13 @@ const styles = StyleSheet.create({
   listContainer: { paddingHorizontal: 20, paddingBottom: 20 },
   participantCard: {
     backgroundColor: fluentColors.white, borderWidth: 1, borderColor: fluentColors.neutralLighter,
-    borderRadius: fluentRadius.l, padding: 16, marginBottom: 12, ...fluentShadows.card,
+    borderRadius: fluentRadius.l, padding: 12, marginBottom: 12, ...fluentShadows.card,
   },
-  participantHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  participantHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  participantMainArea: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  participantActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerBadges: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginRight: 8 },
+  expandedContent: { marginTop: 12, borderTopWidth: 1, borderTopColor: fluentColors.neutralLighter, paddingTop: 12 },
   participantNumber: {
     width: 36, height: 36, borderRadius: 18, backgroundColor: fluentColors.brandBackground,
     justifyContent: 'center', alignItems: 'center', marginRight: 12,

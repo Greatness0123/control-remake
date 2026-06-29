@@ -1,0 +1,261 @@
+Starting project at /app
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo-camera@17.0.9 - expected version: ~17.0.10
+  expo-font@14.0.9 - expected version: ~14.0.12
+  expo-location@19.0.7 - expected version: ~19.0.8
+  expo-notifications@0.32.12 - expected version: ~0.32.17
+  expo-print@15.0.7 - expected version: ~15.0.8
+  expo-sharing@14.0.7 - expected version: ~14.0.8
+  expo-status-bar@3.0.8 - expected version: ~3.0.9
+  react-native-svg@15.15.0 - expected version: 15.12.1
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web ./index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web ./index.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 58.5% ( 81/163)
+Web ./index.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 58.5% (284/469)
+Web ./index.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.2% (444/554)
+Web ./index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.3% (568/626)
+Web Bundling failed 16466ms index.js (814 modules)
+ ERROR  SyntaxError: /app/utils/pdfExport.js: Identifier 'uri' has already been declared. (86:10)
+
+  84 |   // Generating a real .xlsx or .csv in a pure Expo environment without extra native deps can be tricky.
+  85 |   // I will use an HTML table that Excel can open as a spreadsheet.
+> 86 |   const { uri } = await Print.printToFileAsync({ html: htmlTable });
+     |           ^
+  87 |
+  88 |   await Sharing.shareAsync(uri, {
+  89 |     mimeType: 'application/pdf',
+    at constructor (/app/node_modules/@babel/parser/lib/index.js:365:19)
+    at FlowParserMixin.raise (/app/node_modules/@babel/parser/lib/index.js:6616:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/app/node_modules/@babel/parser/lib/index.js:1619:19)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1585:12)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1686:11)
+    at FlowParserMixin.declareNameFromIdentifier (/app/node_modules/@babel/parser/lib/index.js:7584:16)
+    at FlowParserMixin.checkIdentifier (/app/node_modules/@babel/parser/lib/index.js:7580:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7517:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7561:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7557:16)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:13429:10)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:3486:11)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13400:12)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/app/node_modules/@babel/parser/lib/index.js:13333:61)
+    at FlowParserMixin.parseBlockBody (/app/node_modules/@babel/parser/lib/index.js:13326:10)
+    at FlowParserMixin.parseBlock (/app/node_modules/@babel/parser/lib/index.js:13314:10)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:12117:24)
+    at /app/node_modules/@babel/parser/lib/index.js:2904:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (/app/node_modules/@babel/parser/lib/index.js:3080:16)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:2904:12)
+    at FlowParserMixin.parseArrowExpression (/app/node_modules/@babel/parser/lib/index.js:12092:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:11281:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:3499:18)
+    at FlowParserMixin.parseCoverCallAndAsyncArrowHead (/app/node_modules/@babel/parser/lib/index.js:11211:27)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:11137:19)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:3662:18)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:11111:19)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:3628:18)
+    at FlowParserMixin.parseExprSubscripts (/app/node_modules/@babel/parser/lib/index.js:11102:17)
+    at FlowParserMixin.parseUpdate (/app/node_modules/@babel/parser/lib/index.js:11083:21)
+    at FlowParserMixin.parseMaybeUnary (/app/node_modules/@babel/parser/lib/index.js:11063:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/app/node_modules/@babel/parser/lib/index.js:10916:61)
+    at FlowParserMixin.parseExprOps (/app/node_modules/@babel/parser/lib/index.js:10921:23)
+    at FlowParserMixin.parseMaybeConditional (/app/node_modules/@babel/parser/lib/index.js:10898:23)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:10848:21)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:3561:18)
+    at /app/node_modules/@babel/parser/lib/index.js:10817:39
+    at FlowParserMixin.allowInAnd (/app/node_modules/@babel/parser/lib/index.js:12438:16)
+    at FlowParserMixin.parseMaybeAssignAllowIn (/app/node_modules/@babel/parser/lib/index.js:10817:17)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13401:91)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+Web ./index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundling failed 1358ms index.js (739 modules)
+ ERROR  SyntaxError: /app/utils/pdfExport.js: Identifier 'uri' has already been declared. (86:10)
+
+  84 |   // Generating a real .xlsx or .csv in a pure Expo environment without extra native deps can be tricky.
+  85 |   // I will use an HTML table that Excel can open as a spreadsheet.
+> 86 |   const { uri } = await Print.printToFileAsync({ html: htmlTable });
+     |           ^
+  87 |
+  88 |   await Sharing.shareAsync(uri, {
+  89 |     mimeType: 'application/pdf',
+    at constructor (/app/node_modules/@babel/parser/lib/index.js:365:19)
+    at FlowParserMixin.raise (/app/node_modules/@babel/parser/lib/index.js:6616:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/app/node_modules/@babel/parser/lib/index.js:1619:19)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1585:12)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1686:11)
+    at FlowParserMixin.declareNameFromIdentifier (/app/node_modules/@babel/parser/lib/index.js:7584:16)
+    at FlowParserMixin.checkIdentifier (/app/node_modules/@babel/parser/lib/index.js:7580:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7517:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7561:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7557:16)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:13429:10)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:3486:11)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13400:12)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/app/node_modules/@babel/parser/lib/index.js:13333:61)
+    at FlowParserMixin.parseBlockBody (/app/node_modules/@babel/parser/lib/index.js:13326:10)
+    at FlowParserMixin.parseBlock (/app/node_modules/@babel/parser/lib/index.js:13314:10)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:12117:24)
+    at /app/node_modules/@babel/parser/lib/index.js:2904:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (/app/node_modules/@babel/parser/lib/index.js:3080:16)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:2904:12)
+    at FlowParserMixin.parseArrowExpression (/app/node_modules/@babel/parser/lib/index.js:12092:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:11281:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:3499:18)
+    at FlowParserMixin.parseCoverCallAndAsyncArrowHead (/app/node_modules/@babel/parser/lib/index.js:11211:27)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:11137:19)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:3662:18)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:11111:19)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:3628:18)
+    at FlowParserMixin.parseExprSubscripts (/app/node_modules/@babel/parser/lib/index.js:11102:17)
+    at FlowParserMixin.parseUpdate (/app/node_modules/@babel/parser/lib/index.js:11083:21)
+    at FlowParserMixin.parseMaybeUnary (/app/node_modules/@babel/parser/lib/index.js:11063:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/app/node_modules/@babel/parser/lib/index.js:10916:61)
+    at FlowParserMixin.parseExprOps (/app/node_modules/@babel/parser/lib/index.js:10921:23)
+    at FlowParserMixin.parseMaybeConditional (/app/node_modules/@babel/parser/lib/index.js:10898:23)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:10848:21)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:3561:18)
+    at /app/node_modules/@babel/parser/lib/index.js:10817:39
+    at FlowParserMixin.allowInAnd (/app/node_modules/@babel/parser/lib/index.js:12438:16)
+    at FlowParserMixin.parseMaybeAssignAllowIn (/app/node_modules/@babel/parser/lib/index.js:10817:17)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13401:91)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+Web Bundling failed 682ms index.js (781 modules)
+ ERROR  SyntaxError: /app/utils/pdfExport.js: Identifier 'uri' has already been declared. (86:10)
+
+  84 |   // Generating a real .xlsx or .csv in a pure Expo environment without extra native deps can be tricky.
+  85 |   // I will use an HTML table that Excel can open as a spreadsheet.
+> 86 |   const { uri } = await Print.printToFileAsync({ html: htmlTable });
+     |           ^
+  87 |
+  88 |   await Sharing.shareAsync(uri, {
+  89 |     mimeType: 'application/pdf',
+    at constructor (/app/node_modules/@babel/parser/lib/index.js:365:19)
+    at FlowParserMixin.raise (/app/node_modules/@babel/parser/lib/index.js:6616:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/app/node_modules/@babel/parser/lib/index.js:1619:19)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1585:12)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1686:11)
+    at FlowParserMixin.declareNameFromIdentifier (/app/node_modules/@babel/parser/lib/index.js:7584:16)
+    at FlowParserMixin.checkIdentifier (/app/node_modules/@babel/parser/lib/index.js:7580:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7517:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7561:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7557:16)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:13429:10)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:3486:11)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13400:12)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/app/node_modules/@babel/parser/lib/index.js:13333:61)
+    at FlowParserMixin.parseBlockBody (/app/node_modules/@babel/parser/lib/index.js:13326:10)
+    at FlowParserMixin.parseBlock (/app/node_modules/@babel/parser/lib/index.js:13314:10)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:12117:24)
+    at /app/node_modules/@babel/parser/lib/index.js:2904:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (/app/node_modules/@babel/parser/lib/index.js:3080:16)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:2904:12)
+    at FlowParserMixin.parseArrowExpression (/app/node_modules/@babel/parser/lib/index.js:12092:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:11281:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:3499:18)
+    at FlowParserMixin.parseCoverCallAndAsyncArrowHead (/app/node_modules/@babel/parser/lib/index.js:11211:27)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:11137:19)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:3662:18)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:11111:19)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:3628:18)
+    at FlowParserMixin.parseExprSubscripts (/app/node_modules/@babel/parser/lib/index.js:11102:17)
+    at FlowParserMixin.parseUpdate (/app/node_modules/@babel/parser/lib/index.js:11083:21)
+    at FlowParserMixin.parseMaybeUnary (/app/node_modules/@babel/parser/lib/index.js:11063:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/app/node_modules/@babel/parser/lib/index.js:10916:61)
+    at FlowParserMixin.parseExprOps (/app/node_modules/@babel/parser/lib/index.js:10921:23)
+    at FlowParserMixin.parseMaybeConditional (/app/node_modules/@babel/parser/lib/index.js:10898:23)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:10848:21)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:3561:18)
+    at /app/node_modules/@babel/parser/lib/index.js:10817:39
+    at FlowParserMixin.allowInAnd (/app/node_modules/@babel/parser/lib/index.js:12438:16)
+    at FlowParserMixin.parseMaybeAssignAllowIn (/app/node_modules/@babel/parser/lib/index.js:10817:17)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13401:91)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+Web ./index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundling failed 854ms index.js (729 modules)
+ ERROR  SyntaxError: /app/utils/pdfExport.js: Identifier 'uri' has already been declared. (86:10)
+
+  84 |   // Generating a real .xlsx or .csv in a pure Expo environment without extra native deps can be tricky.
+  85 |   // I will use an HTML table that Excel can open as a spreadsheet.
+> 86 |   const { uri } = await Print.printToFileAsync({ html: htmlTable });
+     |           ^
+  87 |
+  88 |   await Sharing.shareAsync(uri, {
+  89 |     mimeType: 'application/pdf',
+    at constructor (/app/node_modules/@babel/parser/lib/index.js:365:19)
+    at FlowParserMixin.raise (/app/node_modules/@babel/parser/lib/index.js:6616:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/app/node_modules/@babel/parser/lib/index.js:1619:19)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1585:12)
+    at FlowScopeHandler.declareName (/app/node_modules/@babel/parser/lib/index.js:1686:11)
+    at FlowParserMixin.declareNameFromIdentifier (/app/node_modules/@babel/parser/lib/index.js:7584:16)
+    at FlowParserMixin.checkIdentifier (/app/node_modules/@babel/parser/lib/index.js:7580:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7517:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7561:12)
+    at FlowParserMixin.checkLVal (/app/node_modules/@babel/parser/lib/index.js:7557:16)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:13429:10)
+    at FlowParserMixin.parseVarId (/app/node_modules/@babel/parser/lib/index.js:3486:11)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13400:12)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/app/node_modules/@babel/parser/lib/index.js:13333:61)
+    at FlowParserMixin.parseBlockBody (/app/node_modules/@babel/parser/lib/index.js:13326:10)
+    at FlowParserMixin.parseBlock (/app/node_modules/@babel/parser/lib/index.js:13314:10)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:12117:24)
+    at /app/node_modules/@babel/parser/lib/index.js:2904:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (/app/node_modules/@babel/parser/lib/index.js:3080:16)
+    at FlowParserMixin.parseFunctionBody (/app/node_modules/@babel/parser/lib/index.js:2904:12)
+    at FlowParserMixin.parseArrowExpression (/app/node_modules/@babel/parser/lib/index.js:12092:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:11281:10)
+    at FlowParserMixin.parseAsyncArrowFromCallExpression (/app/node_modules/@babel/parser/lib/index.js:3499:18)
+    at FlowParserMixin.parseCoverCallAndAsyncArrowHead (/app/node_modules/@babel/parser/lib/index.js:11211:27)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:11137:19)
+    at FlowParserMixin.parseSubscript (/app/node_modules/@babel/parser/lib/index.js:3662:18)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:11111:19)
+    at FlowParserMixin.parseSubscripts (/app/node_modules/@babel/parser/lib/index.js:3628:18)
+    at FlowParserMixin.parseExprSubscripts (/app/node_modules/@babel/parser/lib/index.js:11102:17)
+    at FlowParserMixin.parseUpdate (/app/node_modules/@babel/parser/lib/index.js:11083:21)
+    at FlowParserMixin.parseMaybeUnary (/app/node_modules/@babel/parser/lib/index.js:11063:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/app/node_modules/@babel/parser/lib/index.js:10916:61)
+    at FlowParserMixin.parseExprOps (/app/node_modules/@babel/parser/lib/index.js:10921:23)
+    at FlowParserMixin.parseMaybeConditional (/app/node_modules/@babel/parser/lib/index.js:10898:23)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:10848:21)
+    at FlowParserMixin.parseMaybeAssign (/app/node_modules/@babel/parser/lib/index.js:3561:18)
+    at /app/node_modules/@babel/parser/lib/index.js:10817:39
+    at FlowParserMixin.allowInAnd (/app/node_modules/@babel/parser/lib/index.js:12438:16)
+    at FlowParserMixin.parseMaybeAssignAllowIn (/app/node_modules/@babel/parser/lib/index.js:10817:17)
+    at FlowParserMixin.parseVar (/app/node_modules/@babel/parser/lib/index.js:13401:91)
+    at FlowParserMixin.parseVarStatement (/app/node_modules/@babel/parser/lib/index.js:13247:10)
+    at FlowParserMixin.parseStatementContent (/app/node_modules/@babel/parser/lib/index.js:12868:23)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:12784:17)
+    at FlowParserMixin.parseStatementLike (/app/node_modules/@babel/parser/lib/index.js:2930:24)
+    at FlowParserMixin.parseStatementListItem (/app/node_modules/@babel/parser/lib/index.js:12764:17)

@@ -70,6 +70,7 @@ const CourseRepManager = ({ navigation, route }) => {
       const existingRep = reps.find((r) => r.studentId === student.id);
       if (existingRep) {
         Alert.alert('Error', 'This student is already a course rep for this course');
+        setAdding(false);
         return;
       }
 
@@ -101,7 +102,7 @@ const CourseRepManager = ({ navigation, route }) => {
     }
   };
 
-  const removeRep = (repId, studentName) => {
+  const removeRep = async (repId, studentName) => {
     Alert.alert('Remove Course Rep', `Remove ${studentName} as a course rep?`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -111,7 +112,7 @@ const CourseRepManager = ({ navigation, route }) => {
           try {
             await deleteDoc(doc(firestore, 'courseReps', repId));
             setReps((prev) => prev.filter((r) => r.id !== repId));
-            Alert.alert('Removed', `${studentName} is no longer a course rep`);
+            // No Alert here to ensure UI updates immediately without interruption
           } catch (error) {
             Alert.alert('Error', 'Failed to remove course rep');
           }
@@ -317,9 +318,11 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.neutralLightest },
+  container: { flex: 1, backgroundColor: fluentColors.neutralLightest, alignItems: 'center' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: fluentColors.white },
   header: {
+    width: '100%',
+    maxWidth: 800,
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.m, backgroundColor: fluentColors.white,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
@@ -329,7 +332,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '700', color: fluentColors.neutralPrimary },
   subtitle: { fontSize: 13, color: fluentColors.neutralSecondary, marginTop: 2 },
   addButton: { padding: 4 },
-  listContent: { padding: fluentSpacing.m, paddingBottom: 100 },
+  listContent: { width: '100%', maxWidth: 800, padding: fluentSpacing.m, paddingBottom: 100 },
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: fluentColors.neutralPrimary, marginTop: fluentSpacing.m },
   emptyText: { fontSize: 13, color: fluentColors.neutralSecondary, marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },
