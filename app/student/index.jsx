@@ -189,7 +189,7 @@ const StudentDashboard = ({ navigation, route }) => {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b82f6"]} />}
         >
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>Student Dashboard</Text>
+            <Text style={styles.title} numberOfLines={1}>Welcome, {userData?.fullName || 'Student'}</Text>
             <View style={styles.topIconsContainer}>
               <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
                 <Ionicons name="log-out-outline" size={24} color="#ef4444" />
@@ -201,12 +201,6 @@ const StudentDashboard = ({ navigation, route }) => {
           </View>
 
           <View style={styles.welcomeSection}>
-            {userData?.fullName && (
-              <Text style={styles.welcomeText}>
-                Welcome, <Text style={styles.nameText}>{userData.fullName}</Text>
-              </Text>
-            )}
-            
             <View style={styles.statsContainer}>
               <View style={styles.statCard}>
                 <Text style={styles.statNumber}>{pastBroadcasts.length}</Text>
@@ -431,9 +425,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     paddingTop: 40,
     paddingBottom: 40,
+    alignItems: 'center',
   },
   scrollContainer: {
     flex: 1,
+    width: '100%',
+    maxWidth: 800,
   },
   loadingContainer: {
     flex: 1,
@@ -450,9 +447,10 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1e293b',
+    flex: 1,
   },
   topIconsContainer: {
     flexDirection: 'row',

@@ -197,6 +197,7 @@ const SignUp = ({ navigation, onSignup }) => {
   const [departmentInput, setDepartmentInput] = useState('');
   const [departmentIsValid, setDepartmentIsValid] = useState(true);
   const [matricNumber, setMatricNumber] = useState('');
+  const [title, setTitle] = useState(null);
   const [errors, setErrors] = useState({
     fullName: false,
     email: false,
@@ -205,6 +206,7 @@ const SignUp = ({ navigation, onSignup }) => {
     college: false,
     department: false,
     matricNumber: false,
+    title: false,
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -219,6 +221,16 @@ const SignUp = ({ navigation, onSignup }) => {
   // Dropdown open states
   const [levelOpen, setLevelOpen] = useState(false);
   const [collegeOpen, setCollegeOpen] = useState(false);
+  const [titleOpen, setTitleOpen] = useState(false);
+
+  const TITLES = [
+    { label: 'Dr.', value: 'Dr.' },
+    { label: 'Prof.', value: 'Prof.' },
+    { label: 'Mr.', value: 'Mr.' },
+    { label: 'Mrs.', value: 'Mrs.' },
+    { label: 'Ms.', value: 'Ms.' },
+    { label: 'Engr.', value: 'Engr.' },
+  ];
 
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(50))[0];
@@ -317,6 +329,7 @@ const SignUp = ({ navigation, onSignup }) => {
       department: userRole === 'Student' && (!department || !departmentIsValid),
       matricNumber: userRole === 'Student' && matricNumber.trim() === '',
       userRole: userRole.trim() === '',
+      title: userRole === 'Teacher' && !title,
     };
     setErrors(newErrors);
 
@@ -330,7 +343,9 @@ const SignUp = ({ navigation, onSignup }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await saveUserData(user, fullName, userRole, currentLevel, college, department, matricNumber, teacherId);
+      const finalFullName = userRole === 'Teacher' ? `${title} ${fullName.trim()}` : fullName.trim();
+
+      await saveUserData(user, finalFullName, userRole, currentLevel, college, department, matricNumber, teacherId);
       showAlert('Success', 'Signup successful! Redirecting to login...');
       navigation.reset({
         index: 0,
@@ -376,6 +391,7 @@ const SignUp = ({ navigation, onSignup }) => {
 
   const renderFormContent = () => (
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      <View style={styles.formWrapper}>
       <Animated.View 
                       style={[
                         styles.logoContainer,
@@ -394,6 +410,76 @@ const SignUp = ({ navigation, onSignup }) => {
         </View>
       ) : null}
 
+      {/* User Role Selection */}
+      <Text style={styles.label}>I am a:</Text>
+      <View style={styles.roleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.roleButton,
+            userRole === 'Student' ? styles.roleButtonSelected : styles.roleButtonDefault,
+          ]}
+          onPress={() => handleRoleSelection('Student')}
+        >
+          <Ionicons
+            name="school-outline"
+            size={20}
+            color={userRole === 'Student' ? '#ffffff' : '#64748b'}
+          />
+          <Text
+            style={[
+              styles.roleButtonText,
+              userRole === 'Student' ? styles.roleButtonTextSelected : {},
+            ]}
+          >
+            Student
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.roleButton,
+            userRole === 'Teacher' ? styles.roleButtonSelected : styles.roleButtonDefault,
+          ]}
+          onPress={() => handleRoleSelection('Teacher')}
+        >
+          <Ionicons
+            name="person-outline"
+            size={20}
+            color={userRole === 'Teacher' ? '#ffffff' : '#64748b'}
+          />
+          <Text
+            style={[
+              styles.roleButtonText,
+              userRole === 'Teacher' ? styles.roleButtonTextSelected : {},
+            ]}
+          >
+            Lecturer
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {userRole === 'Teacher' && (
+        <View style={[styles.dropdownContainerWrapper, { zIndex: 6000 }]}>
+          <Ionicons name="medal-outline" size={20} color="#64748b" style={styles.dropdownIcon} />
+          <DropDownPicker
+            open={titleOpen}
+            value={title}
+            items={TITLES}
+            setOpen={setTitleOpen}
+            setValue={setTitle}
+            placeholder="Select Title"
+            style={[
+              styles.dropdown,
+              errors.title && styles.dropdownError
+            ]}
+            dropDownContainerStyle={styles.dropdownMenu}
+            textStyle={styles.dropdownItemText}
+            placeholderStyle={styles.dropdownPlaceholder}
+            arrowIconStyle={styles.arrowIcon}
+            maxHeight={200}
+            zIndex={6000}
+          />
+        </View>
+      )}
       
       <View style={styles.inputContainer}>
         <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
@@ -459,52 +545,6 @@ const SignUp = ({ navigation, onSignup }) => {
         />
       </View>
 
-      {/* User Role Selection */}
-      <Text style={styles.label}>I am a:</Text>
-      <View style={styles.roleContainer}>
-        <TouchableOpacity
-          style={[
-            styles.roleButton,
-            userRole === 'Student' ? styles.roleButtonSelected : styles.roleButtonDefault,
-          ]}
-          onPress={() => handleRoleSelection('Student')}
-        >
-          <Ionicons 
-            name="school-outline" 
-            size={20} 
-            color={userRole === 'Student' ? '#ffffff' : '#64748b'} 
-          />
-          <Text
-            style={[
-              styles.roleButtonText,
-              userRole === 'Student' ? styles.roleButtonTextSelected : {},
-            ]}
-          >
-            Student
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.roleButton,
-            userRole === 'Teacher' ? styles.roleButtonSelected : styles.roleButtonDefault,
-          ]}
-          onPress={() => handleRoleSelection('Teacher')}
-        >
-          <Ionicons 
-            name="person-outline" 
-            size={20} 
-            color={userRole === 'Teacher' ? '#ffffff' : '#64748b'} 
-          />
-          <Text
-            style={[
-              styles.roleButtonText,
-              userRole === 'Teacher' ? styles.roleButtonTextSelected : {},
-            ]}
-          >
-            Lecturer
-          </Text>
-        </TouchableOpacity>
-      </View>
 
     
       {userRole === 'Student' && (
@@ -703,6 +743,7 @@ const SignUp = ({ navigation, onSignup }) => {
           <Text style={styles.loginLink}>Sign In</Text>
         </TouchableOpacity>
       </View>
+      </View>
     </Animated.View>
   );
 
@@ -860,6 +901,12 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  formWrapper: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
   logoContainer: {
     alignItems: 'center',

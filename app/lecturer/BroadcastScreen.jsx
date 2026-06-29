@@ -105,7 +105,7 @@ const LecturerBroadcast = ({ navigation, route }) => {
         </html>
       `;
 
-      const { uri } = await Print.printToFileAsync({ pdfhtml });
+      const { uri } = await Print.printToFileAsync({ html: pdfhtml });
       await Sharing.shareAsync(uri, {
         mimeType: 'application/pdf',
         dialogTitle: `${customId} Attendance`,

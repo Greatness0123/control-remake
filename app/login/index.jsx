@@ -333,6 +333,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingTop: 40,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

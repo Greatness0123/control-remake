@@ -6,7 +6,8 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { auth, firestore } from '../../config/firebaseconfig';
 import { collection, getDocs, doc, getDoc, deleteDoc, query, where } from 'firebase/firestore';
-import { exportCoursePDF } from '../../utils/pdfExport';
+import { exportCoursePDF, exportSessionPDF, exportSessionXLSX } from '../../utils/pdfExport';
+import { db } from '../../config/firebaseconfig';
 import { fluentColors, fluentSpacing, fluentRadius, fluentShadows } from '../../utils/fluentTheme';
 
 const CourseDetailScreen = ({ navigation, route }) => {
@@ -20,6 +21,7 @@ const CourseDetailScreen = ({ navigation, route }) => {
   const [exporting, setExporting] = useState(false);
 
   const fetchSessions = useCallback(async () => {
+    setLoading(true);
     try {
       const broadcastsSnapshot = await getDocs(collection(firestore, 'broadcasts'));
       const courseSessions = await Promise.all(
@@ -245,6 +247,21 @@ const CourseDetailScreen = ({ navigation, route }) => {
                     <Ionicons name="eye-outline" size={16} color={fluentColors.brand} />
                     <Text style={styles.viewButtonText}>View</Text>
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionIconButton}
+                    onPress={() => exportSessionPDF(item.id)}
+                  >
+                    <Ionicons name="document-outline" size={18} color={fluentColors.brand} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionIconButton}
+                    onPress={() => exportSessionXLSX(item.id)}
+                  >
+                    <Ionicons name="grid-outline" size={18} color={fluentColors.success} />
+                  </TouchableOpacity>
+
                   {canDelete && (
                     <TouchableOpacity
                       style={styles.deleteSessionButton}
@@ -268,9 +285,11 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.neutralLightest },
+  container: { flex: 1, backgroundColor: fluentColors.neutralLightest, alignItems: 'center' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: fluentColors.white },
   header: {
+    width: '100%',
+    maxWidth: 800,
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.m, backgroundColor: fluentColors.white,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
@@ -280,6 +299,8 @@ const styles = StyleSheet.create({
   courseCode: { fontSize: 20, fontWeight: '700', color: fluentColors.neutralPrimary },
   courseName: { fontSize: 14, color: fluentColors.neutralSecondary, marginTop: 2 },
   statsBar: {
+    width: '100%',
+    maxWidth: 800,
     flexDirection: 'row', backgroundColor: fluentColors.white, paddingVertical: fluentSpacing.m,
     paddingHorizontal: fluentSpacing.l, borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
   },
@@ -288,6 +309,8 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, color: fluentColors.neutralSecondary, marginTop: 2 },
   statDivider: { width: 1, backgroundColor: fluentColors.neutralLighter, marginHorizontal: fluentSpacing.s },
   actionsRow: {
+    width: '100%',
+    maxWidth: 800,
     flexDirection: 'row', gap: fluentSpacing.s, paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.s,
   },
@@ -303,6 +326,8 @@ const styles = StyleSheet.create({
   },
   manageRepsText: { color: fluentColors.brand, fontWeight: '600', fontSize: 14 },
   sectionHeader: {
+    width: '100%',
+    maxWidth: 800,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: fluentSpacing.m, paddingVertical: fluentSpacing.s,
   },
@@ -312,7 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: fluentRadius.m, gap: 4,
   },
   exportButtonText: { color: fluentColors.white, fontSize: 12, fontWeight: '600' },
-  listContent: { padding: fluentSpacing.m, paddingBottom: 100 },
+  listContent: { width: '100%', maxWidth: 800, padding: fluentSpacing.m, paddingBottom: 100 },
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: fluentColors.neutralPrimary, marginTop: fluentSpacing.s },
   emptyText: { fontSize: 13, color: fluentColors.neutralSecondary, marginTop: 4 },
@@ -341,6 +366,7 @@ const styles = StyleSheet.create({
     backgroundColor: fluentColors.brandBackground, paddingHorizontal: 12, paddingVertical: 6, borderRadius: fluentRadius.m,
   },
   viewButtonText: { color: fluentColors.brand, fontSize: 12, fontWeight: '600' },
+  actionIconButton: { padding: fluentSpacing.s },
   deleteSessionButton: { padding: fluentSpacing.s },
 });
 
