@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const QRCodeScanner = ({ navigation, route }) => {
   const [permission, requestPermission] = useCameraPermissions();
@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,  
+    paddingBottom: 16, 
   },
   camera: {
     flex: 1,

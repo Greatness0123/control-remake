@@ -15,9 +15,9 @@ import {
   StatusBar,
   ScrollView
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { firestore } from '../../config/firebaseconfig';
-import { collection, getDoc, doc, setDoc, Timestamp, GeoPoint, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDoc, doc, setDoc, addDoc, Timestamp, GeoPoint, getDocs, query, where } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getCurrentLocation } from '../../utils/locationHelpers';
 import { calculateDistance, getPlatformAccuracyBuffer, isInRange, getPlatformIdentifier } from '../../utils/locationHelpers';
@@ -268,6 +268,21 @@ const FindBroadcastScreen = ({ navigation, route }) => {
       };
 
       await setDoc(doc(firestore, `broadcasts/${broadcastId}/participants`, user.uid), studentInfo);
+
+      try {
+        await addDoc(collection(firestore, `students/${user.uid}/attendanceHistory`), {
+          broadcastId,
+          courseId: broadcastData.courseId || null,
+          courseCode: broadcastData.customId || broadcastId,
+          takenAt: Timestamp.now(),
+          status: 'success',
+          lecturerName: broadcastData.teacherFullName || 'Unknown',
+          sessionName: broadcastData.sessionName || '',
+        });
+      } catch (historyError) {
+        console.error('Failed to record attendance history:', historyError);
+      }
+
       showAlert('Success', 'You have successfully joined the broadcast!');
       setTimeout(() => {
         navigation.reset({

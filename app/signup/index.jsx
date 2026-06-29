@@ -19,7 +19,7 @@ import {
   Dimensions,
   ScrollView
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { auth, db } from '../../config/firebaseconfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';

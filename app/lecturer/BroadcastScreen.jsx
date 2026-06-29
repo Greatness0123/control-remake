@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, Share, StyleSheet, RefreshControl, ScrollView, ActivityIndicator, SafeAreaView, Keyboard, Platform, Modal, StatusBar, Alert, Switch } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { firestore } from '../../config/firebaseconfig';
 import QRCode from 'react-native-qrcode-svg';
 import { collection, getDocs, updateDoc, doc, addDoc, Timestamp, deleteDoc, getDoc } from 'firebase/firestore';
@@ -13,9 +13,11 @@ import * as Notifications from 'expo-notifications';
 import * as Print from 'expo-print';
 
 const LecturerBroadcast = ({ navigation, route }) => {
+  const courseIdParam = route.params?.courseId || null;
+  const courseCodeParam = route.params?.courseCode || '';
   const [broadcasts, setBroadcasts] = useState([]);
   const [radius, setRadius] = useState('5');
-  const [customBroadcastId, setCustomBroadcastId] = useState('');
+  const [customBroadcastId, setCustomBroadcastId] = useState(courseCodeParam);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [selectedBroadcast, setSelectedBroadcast] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -219,6 +221,12 @@ const LecturerBroadcast = ({ navigation, route }) => {
         broadcasterPlatform: getPlatformIdentifier(),
       };
 
+      if (courseIdParam) {
+        broadcastData.courseId = courseIdParam;
+        broadcastData.takenBy = user.uid;
+        broadcastData.takenByName = teacherFullName;
+      }
+
       if (useLocation && location) {
         broadcastData.radiusMeters = radiusMeters;
         broadcastData.coordinates = new GeoPoint(location.latitude, location.longitude);
@@ -357,6 +365,10 @@ const LecturerBroadcast = ({ navigation, route }) => {
         currentLevel: studentData.currentLevel,
         timeSignedIn: Timestamp.now(),
         addedByLecturer: true,
+        addedByRep: false,
+        addedBy: user.uid,
+        addedByName: teacherFullName,
+        addedByRole: 'lecturer',
         studentPlatform: 'MANUAL_ADD',
       });
 

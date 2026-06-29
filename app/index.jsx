@@ -12,6 +12,12 @@ import FindBroadcastScreen from './student/AvailableBroadcastScreen';
 import AdminScreen from './admin';
 import QRCodeScanner from './screens/QRCodeScanner';
 import ParticipantsView from './screens/ParticipantView';
+import CourseDashboard from './lecturer/CourseDashboard';
+import CourseDetailScreen from './lecturer/CourseDetailScreen';
+import CourseRepManager from './lecturer/CourseRepManager';
+import NewAttendanceScreen from './lecturer/NewAttendanceScreen';
+import CourseHistoryScreen from './student/CourseHistoryScreen';
+import SharedCoursesScreen from './student/SharedCoursesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -75,6 +81,30 @@ export default function App() {
         name="ParticipantsView"
          component={ParticipantsView} 
          />
+        <Stack.Screen 
+          name="CourseDashboard" 
+          component={CourseDashboard} 
+        />
+        <Stack.Screen 
+          name="CourseDetail" 
+          component={CourseDetailScreen} 
+        />
+        <Stack.Screen 
+          name="CourseRepManager" 
+          component={CourseRepManager} 
+        />
+        <Stack.Screen 
+          name="NewAttendance" 
+          component={NewAttendanceScreen} 
+        />
+        <Stack.Screen 
+          name="CourseHistory" 
+          component={CourseHistoryScreen} 
+        />
+        <Stack.Screen 
+          name="SharedCourses" 
+          component={SharedCoursesScreen} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

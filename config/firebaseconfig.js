@@ -29,3 +29,10 @@ export const db = getFirestore(app);
 export const database = getDatabase(app); 
 export const firestore = getFirestore(app);
 export default app;  
+
+
+
+  //  "assetBundlePatterns": [
+  //     "**/*",
+  //     "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/*.ttf"
+  //   ],

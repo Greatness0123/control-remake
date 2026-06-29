@@ -25,12 +25,15 @@
       "package": "bellsattend.apk"
     },
     "web": {
-      "favicon": "./assets/bells-logo.png"
+      "favicon": "./assets/bells-logo.png",
+      "bundler": "metro",
+      "publicPath": "/"       
     },
     "extra": {
       "eas": {
         "projectId": "2e8474c8-1184-4360-8d06-0562499530ed"
       }
-    }
+    },
+     "platforms": ["ios", "android", "web"]
   }
 }

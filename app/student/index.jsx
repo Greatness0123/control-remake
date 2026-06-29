@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, RefreshControl, ScrollView, FlatList, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { auth, firestore } from '../../config/firebaseconfig';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { Platform } from 'react-native';
 
 const StudentDashboard = ({ navigation, route }) => {
@@ -14,6 +14,8 @@ const StudentDashboard = ({ navigation, route }) => {
   const [pastBroadcasts, setPastBroadcasts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
+  const [isCourseRep, setIsCourseRep] = useState(false);
+  const [sharedCoursesCount, setSharedCoursesCount] = useState(0);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -35,6 +37,24 @@ const StudentDashboard = ({ navigation, route }) => {
     };
 
     fetchUserData();
+
+    const checkCourseRep = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const repsSnapshot = await getDocs(
+            query(collection(firestore, 'courseReps'), where('studentId', '==', user.uid))
+          );
+          const activeReps = repsSnapshot.docs.filter(d => d.data().isActive);
+          setIsCourseRep(activeReps.length > 0);
+          setSharedCoursesCount(activeReps.length);
+        }
+      } catch (error) {
+        console.error('Failed to check course rep status:', error);
+      }
+    };
+
+    checkCourseRep();
   }, []);
 
   useEffect(() => {
@@ -199,6 +219,40 @@ const StudentDashboard = ({ navigation, route }) => {
                 <Text style={styles.statLabel}>Attended</Text>
               </View>
             </View>
+          </View>
+
+          <View style={styles.quickActionsSection}>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              onPress={() => navigation.navigate('CourseHistory')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#EFF6FC' }]}>
+                <Ionicons name="school" size={24} color="#0078D4" />
+              </View>
+              <View style={styles.quickActionInfo}>
+                <Text style={styles.quickActionTitle}>Attendance by Course</Text>
+                <Text style={styles.quickActionSubtext}>View per-course statistics</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#A19F9D" />
+            </TouchableOpacity>
+
+            {isCourseRep && (
+              <TouchableOpacity
+                style={styles.quickActionCard}
+                onPress={() => navigation.navigate('SharedCourses')}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: '#F3E8FF' }]}>
+                  <Ionicons name="people" size={24} color="#8764B8" />
+                </View>
+                <View style={styles.quickActionInfo}>
+                  <Text style={styles.quickActionTitle}>Shared Courses</Text>
+                  <Text style={styles.quickActionSubtext}>You're a Course Rep for {sharedCoursesCount} course{sharedCoursesCount !== 1 ? 's' : ''}</Text>
+                </View>
+                <View style={styles.repBadge}>
+                  <Text style={styles.repBadgeText}>Rep</Text>
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.sectionHeader}>
@@ -657,6 +711,57 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: '#ffffff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  quickActionsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  quickActionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#EDEBE9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quickActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  quickActionInfo: {
+    flex: 1,
+  },
+  quickActionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#242424',
+  },
+  quickActionSubtext: {
+    fontSize: 12,
+    color: '#605E5C',
+    marginTop: 2,
+  },
+  repBadge: {
+    backgroundColor: '#F3E8FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  repBadgeText: {
+    color: '#8764B8',
+    fontSize: 12,
     fontWeight: '600',
   },
 });

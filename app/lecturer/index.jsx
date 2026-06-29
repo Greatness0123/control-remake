@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, ActivityIndicator, RefreshControl, ScrollView, PanResponder, SafeAreaView, TextInput, Platform, StatusBar } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { auth, firestore } from '../../config/firebaseconfig';
-import { collection, getDocs, doc, getDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, deleteDoc, addDoc, query, where } from 'firebase/firestore';
+import { fluentColors, fluentSpacing, fluentRadius, fluentShadows } from '../../utils/fluentTheme';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 import QRCode from 'react-native-qrcode-svg';
@@ -31,6 +32,7 @@ const LecturerDashboard = ({ navigation }) => {
   const [reportData, setReportData] = useState([]);
   const [addStudentModalVisible, setAddStudentModalVisible] = useState(false);
   const [matricNumber, setMatricNumber] = useState('');
+  const [courses, setCourses] = useState([]);
       
   const clearSearchResults = () => {
     setSearchResults({ count: 0, occurrences: [] });
@@ -107,9 +109,23 @@ const LecturerDashboard = ({ navigation }) => {
     const fetchData = async () => {
       await fetchLecturerData();
       await fetchLecturerBroadcasts();
+      await fetchCourses();
     };
     fetchData();
   }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const coursesSnapshot = await getDocs(
+        query(collection(firestore, 'courses'), where('lecturerId', '==', user.uid))
+      );
+      setCourses(coursesSnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (error) {
+      console.error('Failed to fetch courses:', error);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -493,6 +509,38 @@ const LecturerDashboard = ({ navigation }) => {
               </View>
             </View>
           </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My Courses</Text>
+            <TouchableOpacity style={styles.reportButton} onPress={() => navigation.navigate('CourseDashboard')}>
+              <Ionicons name="school-outline" size={20} color="#ffffff" />
+              <Text style={styles.reportButtonText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {courses.length === 0 ? (
+            <View style={styles.noCoursesContainer}>
+              <Ionicons name="school-outline" size={36} color="#cbd5e1" />
+              <Text style={styles.noCoursesText}>No courses yet. Create one to get started.</Text>
+              <TouchableOpacity style={styles.createCourseButton} onPress={() => navigation.navigate('CourseDashboard')}>
+                <Text style={styles.createCourseText}>Create Course</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.coursesScroll} contentContainerStyle={styles.coursesScrollContent}>
+              {courses.slice(0, 5).map(course => (
+                <TouchableOpacity
+                  key={course.id}
+                  style={styles.courseQuickCard}
+                  onPress={() => navigation.navigate('CourseDetail', { courseId: course.id, courseCode: course.courseCode, courseName: course.courseName })}
+                >
+                  <Ionicons name="school" size={20} color="#3b82f6" />
+                  <Text style={styles.courseQuickCode}>{course.courseCode}</Text>
+                  <Text style={styles.courseQuickName} numberOfLines={1}>{course.courseName}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Past Attendance Records</Text>
@@ -1312,6 +1360,69 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  noCoursesContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 8,
+  },
+  noCoursesText: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  createCourseButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  createCourseText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  coursesScroll: {
+    marginHorizontal: 20,
+    marginBottom: 8,
+  },
+  coursesScrollContent: {
+    gap: 12,
+    paddingVertical: 4,
+  },
+  courseQuickCard: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 16,
+    width: 140,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  courseQuickCode: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 8,
+  },
+  courseQuickName: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
 

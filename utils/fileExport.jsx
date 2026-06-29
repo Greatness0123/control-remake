@@ -16,3 +16,5 @@ export async function exportToPDF(data) {
   });
   return doc.output('datauristring');
 }
+
+// https://expo.dev/accounts/gruco/projects/bells-attend/builds/1aecc7d1-516f-46f7-826a-0e46827fd1da
