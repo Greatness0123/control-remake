@@ -30,23 +30,6 @@ export const exportSessionXLSX = async (broadcastId) => {
   const participantsSnapshot = await getDocs(collection(firestore, `broadcasts/${broadcastId}/participants`));
   const participants = participantsSnapshot.docs.map(d => d.data());
 
-  let csvContent = "\uFEFF"; // BOM for Excel UTF-8
-  csvContent += "S/N,Full Name,Matric Number,College,Department,Level,Time Signed In\n";
-
-  participants.forEach((p, i) => {
-    const time = p.timeSignedIn?.toDate().toLocaleString().replace(/,/g, '') || 'N/A';
-    csvContent += `${i + 1},"${p.fullName || 'N/A'}","${p.matricNumber || 'N/A'}","${p.college || 'N/A'}","${p.department || 'N/A'}","${p.currentLevel || 'N/A'}","${time}"\n`;
-  });
-
-  const filename = `${customId}_attendance.csv`;
-  const { uri } = await Print.printToFileAsync({ html: `<html><body>${csvContent}</body></html>` });
-  // We actually want to share the CSV content. In Expo, we can write to a file and share.
-  // But Print.printToFileAsync is only for PDF.
-  // For simplicity and since we don't have expo-file-system easily accessible for new files here,
-  // we'll use a trick or stick to PDF for now if I can't find a quick way to write CSV.
-  // Actually, I can use Print to generate a very basic PDF that looks like an Excel sheet if needed,
-  // but the user asked for xlsx.
-
   // Correction: I should use a more standard way for CSV/XLSX if possible.
   // Given constraints, I will implement a robust HTML table that Excel can open.
   const htmlTable = `
