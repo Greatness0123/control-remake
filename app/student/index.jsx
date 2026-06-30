@@ -425,12 +425,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     paddingTop: 40,
     paddingBottom: 40,
-    alignItems: 'center',
   },
   scrollContainer: {
     flex: 1,
     width: '100%',
     maxWidth: 800,
+    alignSelf: 'center',
   },
   loadingContainer: {
     flex: 1,
