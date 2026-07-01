@@ -166,24 +166,31 @@ const ParticipantsView = ({ navigation, route }) => {
   };
 
   const removeParticipant = (participantId, participantName) => {
-    Alert.alert(
-      'Remove Student',
-      `Remove ${participantName} from this attendance record?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(firestore, `broadcasts/${broadcastId}/participants`, participantId));
-            } catch (error) {
-              Alert.alert('Error', 'Failed to remove student');
-            }
-          },
-        },
-      ]
-    );
+    const handleRemove = async () => {
+      try {
+        setLoading(true);
+        await deleteDoc(doc(firestore, `broadcasts/${broadcastId}/participants`, participantId));
+      } catch (error) {
+        Alert.alert('Error', 'Failed to remove student');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove ${participantName} from this attendance record?`)) {
+        handleRemove();
+      }
+    } else {
+      Alert.alert(
+        'Remove Student',
+        `Remove ${participantName} from this attendance record?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove', style: 'destructive', onPress: handleRemove },
+        ]
+      );
+    }
   };
 
   const handleBack = () => {
@@ -423,27 +430,30 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.white, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: fluentColors.white },
   header: {
     width: '100%',
     maxWidth: 800,
+    alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
   },
   statsBar: {
     width: '100%',
     maxWidth: 800,
+    alignSelf: 'center',
     flexDirection: 'row', backgroundColor: fluentColors.neutralLightest, paddingVertical: 16,
     paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
   },
   searchContainer: {
     width: '100%',
     maxWidth: 800,
+    alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', backgroundColor: fluentColors.neutralLightest,
     marginHorizontal: 20, marginVertical: 16, paddingHorizontal: 12, paddingVertical: 10,
     borderRadius: fluentRadius.m, borderWidth: 1, borderColor: fluentColors.neutralLighter,
   },
-  listContainer: { width: '100%', maxWidth: 800, paddingHorizontal: 20, paddingBottom: 20 },
+  listContainer: { width: '100%', maxWidth: 800, paddingHorizontal: 20, paddingBottom: 20, alignSelf: 'center' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 16, color: fluentColors.neutralSecondary },
   header: {

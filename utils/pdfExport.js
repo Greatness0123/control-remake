@@ -2,6 +2,7 @@ import { getDocs, collection, getDoc, doc } from 'firebase/firestore';
 import { firestore } from '../config/firebaseconfig';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { Platform } from 'react-native';
 
 export const exportSessionPDF = async (broadcastId) => {
   const broadcastDoc = await getDoc(doc(firestore, 'broadcasts', broadcastId));
@@ -14,12 +15,23 @@ export const exportSessionPDF = async (broadcastId) => {
   const participants = participantsSnapshot.docs.map(d => d.data());
 
   const html = buildSessionHTML(customId, timestamp, takenByName, participants);
-  const { uri } = await Print.printToFileAsync({ html });
-  await Sharing.shareAsync(uri, {
-    mimeType: 'application/pdf',
-    dialogTitle: `${customId} Attendance`,
-    UTI: 'com.adobe.pdf',
-  });
+
+  if (Platform.OS === 'web') {
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (win) {
+      win.focus();
+      // win.print(); // Optional: trigger print immediately
+    }
+  } else {
+    const { uri } = await Print.printToFileAsync({ html });
+    await Sharing.shareAsync(uri, {
+      mimeType: 'application/pdf',
+      dialogTitle: `${customId} Attendance`,
+      UTI: 'com.adobe.pdf',
+    });
+  }
 };
 
 export const exportSessionXLSX = async (broadcastId) => {
@@ -29,6 +41,26 @@ export const exportSessionXLSX = async (broadcastId) => {
 
   const participantsSnapshot = await getDocs(collection(firestore, `broadcasts/${broadcastId}/participants`));
   const participants = participantsSnapshot.docs.map(d => d.data());
+
+  let csvContent = "\uFEFF"; // BOM for Excel UTF-8
+  csvContent += "S/N,Full Name,Matric Number,College,Department,Level,Time Signed In\n";
+
+  participants.forEach((p, i) => {
+    const time = p.timeSignedIn?.toDate().toLocaleString().replace(/,/g, '') || 'N/A';
+    csvContent += `${i + 1},"${p.fullName || 'N/A'}","${p.matricNumber || 'N/A'}","${p.college || 'N/A'}","${p.department || 'N/A'}","${p.currentLevel || 'N/A'}","${time}"\n`;
+  });
+
+  if (Platform.OS === 'web') {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${customId}_attendance.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return;
+  }
 
   // Correction: I should use a more standard way for CSV/XLSX if possible.
   // Given constraints, I will implement a robust HTML table that Excel can open.
@@ -67,7 +99,6 @@ export const exportSessionXLSX = async (broadcastId) => {
   // Generating a real .xlsx or .csv in a pure Expo environment without extra native deps can be tricky.
   // I will use an HTML table that Excel can open as a spreadsheet.
   const { uri } = await Print.printToFileAsync({ html: htmlTable });
-
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',
     dialogTitle: `${customId} Spreadsheet View`,
@@ -96,12 +127,18 @@ export const exportCoursePDF = async (courseId, courseCode, courseName) => {
   sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const html = buildCourseHTML(courseCode, courseName, sessions);
-  const { uri } = await Print.printToFileAsync({ html });
-  await Sharing.shareAsync(uri, {
-    mimeType: 'application/pdf',
-    dialogTitle: `${courseCode} - Full Attendance Report`,
-    UTI: 'com.adobe.pdf',
-  });
+  if (Platform.OS === 'web') {
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  } else {
+    const { uri } = await Print.printToFileAsync({ html });
+    await Sharing.shareAsync(uri, {
+      mimeType: 'application/pdf',
+      dialogTitle: `${courseCode} - Full Attendance Report`,
+      UTI: 'com.adobe.pdf',
+    });
+  }
 };
 
 const buildSessionHTML = (customId, timestamp, takenByName, participants) => `

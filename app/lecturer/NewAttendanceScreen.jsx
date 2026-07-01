@@ -79,24 +79,31 @@ const NewAttendanceScreen = ({ navigation, route }) => {
   };
 
   const deleteBroadcast = (broadcastId) => {
-    Alert.alert('Delete Record', 'Are you sure you want to delete this attendance record?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(firestore, 'broadcasts', broadcastId));
-            Alert.alert('Deleted', 'Record removed');
-          } catch (error) {
-            Alert.alert('Error', 'Failed to delete record');
-          }
-        },
-      },
-    ]);
+    const handleDelete = async () => {
+      try {
+        setLoading(true);
+        await deleteDoc(doc(firestore, 'broadcasts', broadcastId));
+      } catch (error) {
+        Alert.alert('Error', 'Failed to delete record');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this attendance record?')) {
+        handleDelete();
+      }
+    } else {
+      Alert.alert('Delete Record', 'Are you sure you want to delete this attendance record?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: handleDelete },
+      ]);
+    }
   };
 
   const startAttendance = async () => {
+    setLoading(true);
     const auth = getAuth();
     const user = auth.currentUser;
     const radiusMeters = parseFloat(radius);
@@ -327,7 +334,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.neutralLightest, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: fluentColors.neutralLightest },
   scrollContainer: { flex: 1, width: '100%' },
   formWrapper: { width: '100%', maxWidth: 800, alignSelf: 'center' },
   header: {

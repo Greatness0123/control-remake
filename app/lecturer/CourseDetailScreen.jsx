@@ -76,21 +76,28 @@ const CourseDetailScreen = ({ navigation, route }) => {
   };
 
   const handleDeleteSession = (broadcastId) => {
-    Alert.alert('Delete Session', 'Are you sure you want to delete this attendance record?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(firestore, 'broadcasts', broadcastId));
-            setSessions((prev) => prev.filter((s) => s.id !== broadcastId));
-          } catch (error) {
-            Alert.alert('Error', 'Failed to delete session');
-          }
-        },
-      },
-    ]);
+    const handleDelete = async () => {
+      try {
+        setLoading(true);
+        await deleteDoc(doc(firestore, 'broadcasts', broadcastId));
+        setSessions((prev) => prev.filter((s) => s.id !== broadcastId));
+      } catch (error) {
+        Alert.alert('Error', 'Failed to delete session');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this attendance record?')) {
+        handleDelete();
+      }
+    } else {
+      Alert.alert('Delete Session', 'Are you sure you want to delete this attendance record?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: handleDelete },
+      ]);
+    }
   };
 
   const viewParticipants = (session) => {

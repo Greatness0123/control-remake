@@ -105,12 +105,16 @@ const LecturerBroadcast = ({ navigation, route }) => {
         </html>
       `;
 
-      const { uri } = await Print.printToFileAsync({ html: pdfhtml });
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `${customId} Attendance`,
-        UTI: 'com.adobe.pdf'
-      });
+      if (Platform.OS === 'web') {
+        await Print.printAsync({ html: pdfhtml });
+      } else {
+        const { uri } = await Print.printToFileAsync({ html: pdfhtml });
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: `${customId} Attendance`,
+          UTI: 'com.adobe.pdf'
+        });
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to export to PDF: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {

@@ -253,14 +253,16 @@ const LecturerDashboard = ({ navigation }) => {
       `;
 
       // Generate PDF
-      const { uri } = await Print.printToFileAsync({ html: pdfhtml });
-      
-      // Share the PDF
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `${customId} Attendance`,
-        UTI: 'com.adobe.pdf'
-      });
+      if (Platform.OS === 'web') {
+        await Print.printAsync({ html: pdfhtml });
+      } else {
+        const { uri } = await Print.printToFileAsync({ html: pdfhtml });
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: `${customId} Attendance`,
+          UTI: 'com.adobe.pdf'
+        });
+      }
 
     } catch (error) {
       Alert.alert('Error', 'Failed to export to PDF: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -790,12 +792,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     paddingBottom: 40,
-    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
     width: '100%',
     maxWidth: 800,
+    alignSelf: 'center',
   },
   loadingContainer: {
     flex: 1,

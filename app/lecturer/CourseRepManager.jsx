@@ -102,23 +102,32 @@ const CourseRepManager = ({ navigation, route }) => {
     }
   };
 
-  const removeRep = async (repId, studentName) => {
-    Alert.alert('Remove Course Rep', `Remove ${studentName} as a course rep?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(firestore, 'courseReps', repId));
-            setReps((prev) => prev.filter((r) => r.id !== repId));
-            // No Alert here to ensure UI updates immediately without interruption
-          } catch (error) {
-            Alert.alert('Error', 'Failed to remove course rep');
-          }
-        },
-      },
-    ]);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [repToDelete, setRepToDelete] = useState(null);
+
+  const confirmRemoveRep = (rep) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove ${rep.studentName} as a course rep?`)) {
+        handleRemoveRep(rep.id);
+      }
+    } else {
+      Alert.alert('Remove Course Rep', `Remove ${rep.studentName} as a course rep?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => handleRemoveRep(rep.id) },
+      ]);
+    }
+  };
+
+  const handleRemoveRep = async (repId) => {
+    try {
+      setLoading(true);
+      await deleteDoc(doc(firestore, 'courseReps', repId));
+      setReps((prev) => prev.filter((r) => r.id !== repId));
+    } catch (error) {
+      Alert.alert('Error', 'Failed to remove course rep');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const togglePermission = async (repId, permKey, currentValue) => {
@@ -189,7 +198,7 @@ const CourseRepManager = ({ navigation, route }) => {
                   <Text style={styles.repName}>{item.studentName}</Text>
                   <Text style={styles.repMatric}>{item.studentMatric}</Text>
                 </View>
-                <TouchableOpacity onPress={() => removeRep(item.id, item.studentName)} style={styles.removeButton}>
+                <TouchableOpacity onPress={() => confirmRemoveRep(item)} style={styles.removeButton}>
                   <Ionicons name="close-circle" size={24} color={fluentColors.danger} />
                 </TouchableOpacity>
               </View>

@@ -116,30 +116,36 @@ const CourseDashboard = ({ navigation }) => {
   };
 
   const deleteCourse = (courseId, courseCode) => {
-    Alert.alert(
-      'Delete Course',
-      `Are you sure you want to delete ${courseCode}? This will not delete attendance records.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(firestore, 'courses', courseId));
-              setCourses((prev) => prev.filter((c) => c.id !== courseId));
-              Alert.alert('Deleted', 'Course deleted');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete course');
-            }
-          },
-        },
-      ]
-    );
+    const handleDelete = async () => {
+      try {
+        setLoading(true);
+        await deleteDoc(doc(firestore, 'courses', courseId));
+        setCourses((prev) => prev.filter((c) => c.id !== courseId));
+      } catch (error) {
+        Alert.alert('Error', 'Failed to delete course');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to delete ${courseCode}? This will not delete attendance records.`)) {
+        handleDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Course',
+        `Are you sure you want to delete ${courseCode}? This will not delete attendance records.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: handleDelete },
+        ]
+      );
+    }
   };
 
   const handleBack = () => {
-    navigation.reset({ index: 0, routes: [{ name: 'TeacherScreen' }] });
+    navigation.goBack();
   };
 
   if (loading) {
@@ -272,11 +278,12 @@ const styles = StyleSheet.create({
     backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.neutralLightest, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: fluentColors.neutralLightest },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: fluentColors.white },
   header: {
     width: '100%',
     maxWidth: 800,
+    alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.m, backgroundColor: fluentColors.white,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
@@ -284,7 +291,7 @@ const styles = StyleSheet.create({
   backButton: { marginRight: fluentSpacing.s },
   title: { flex: 1, fontSize: 24, fontWeight: '700', color: fluentColors.neutralPrimary },
   addButton: { padding: 4 },
-  listContent: { width: '100%', maxWidth: 800, padding: fluentSpacing.m, paddingBottom: 100 },
+  listContent: { width: '100%', maxWidth: 800, padding: fluentSpacing.m, paddingBottom: 100, alignSelf: 'center' },
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: fluentColors.neutralPrimary, marginTop: fluentSpacing.m },
   emptyText: { fontSize: 14, color: fluentColors.neutralSecondary, marginTop: fluentSpacing.xs, marginBottom: fluentSpacing.l },
