@@ -186,6 +186,7 @@ const StudentDashboard = ({ navigation, route }) => {
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b82f6"]} />}
         >
           <View style={styles.headerContainer}>
@@ -429,8 +430,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
     width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
   },
   loadingContainer: {
     flex: 1,

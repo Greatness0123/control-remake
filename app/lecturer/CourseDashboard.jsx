@@ -173,6 +173,7 @@ const CourseDashboard = ({ navigation }) => {
         <FlatList
           data={courses}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[fluentColors.brand]} />
           }
@@ -282,8 +283,6 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: fluentColors.white },
   header: {
     width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.m, backgroundColor: fluentColors.white,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
@@ -291,7 +290,7 @@ const styles = StyleSheet.create({
   backButton: { marginRight: fluentSpacing.s },
   title: { flex: 1, fontSize: 24, fontWeight: '700', color: fluentColors.neutralPrimary },
   addButton: { padding: 4 },
-  listContent: { width: '100%', maxWidth: 800, padding: fluentSpacing.m, paddingBottom: 100, alignSelf: 'center' },
+  listContent: { width: '100%', padding: fluentSpacing.m, paddingBottom: 100 },
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: fluentColors.neutralPrimary, marginTop: fluentSpacing.m },
   emptyText: { fontSize: 14, color: fluentColors.neutralSecondary, marginTop: fluentSpacing.xs, marginBottom: fluentSpacing.l },

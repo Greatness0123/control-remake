@@ -157,6 +157,7 @@ const CourseHistoryScreen = ({ navigation }) => {
         <FlatList
           data={courses}
           keyExtractor={(item) => item.courseId}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[fluentColors.brand]} />
           }

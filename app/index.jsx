@@ -18,6 +18,7 @@ import CourseRepManager from './lecturer/CourseRepManager';
 import NewAttendanceScreen from './lecturer/NewAttendanceScreen';
 import CourseHistoryScreen from './student/CourseHistoryScreen';
 import SharedCoursesScreen from './student/SharedCoursesScreen';
+import Toast from './components/Toast';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,8 +43,14 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer
+      documentTitle={{
+        enabled: false
+      }}
+    >
+      <Stack.Navigator screenOptions={{
+        headerShown: false,
+      }}>
         
         <Stack.Screen 
           name="Login" 
@@ -106,6 +113,7 @@ export default function App() {
           component={SharedCoursesScreen} 
         />
       </Stack.Navigator>
+      <Toast />
     </NavigationContainer>
   );
 }

@@ -120,6 +120,7 @@ const SharedCoursesScreen = ({ navigation }) => {
         <FlatList
           data={sharedCourses}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[fluentColors.brand]} />
           }

@@ -10,12 +10,16 @@ import { getAuth } from 'firebase/auth';
 import { getCurrentLocation, getPlatformIdentifier } from '../../utils/locationHelpers';
 import { fluentColors, fluentSpacing, fluentRadius, fluentShadows } from '../../utils/fluentTheme';
 import QRCode from 'react-native-qrcode-svg';
+import { showToast } from '../components/Toast';
 
 const NewAttendanceScreen = ({ navigation, route }) => {
   const { courseId, courseCode, userName } = route.params;
   const [sessionName, setSessionName] = useState('');
   const [radius, setRadius] = useState('5');
   const [useLocation, setUseLocation] = useState(false);
+  const [timeLimit, setTimeLimit] = useState('');
+  const [isManualOnly, setIsManualOnly] = useState(false);
+  const [excludeFromSummary, setExcludeFromSummary] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRadiusEmpty, setIsRadiusEmpty] = useState(false);
   const [isSessionNameEmpty, setIsSessionNameEmpty] = useState(false);
@@ -25,6 +29,10 @@ const NewAttendanceScreen = ({ navigation, route }) => {
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [selectedBroadcastForQR, setSelectedBroadcastForQR] = useState(null);
 
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingBroadcast, setEditingBroadcast] = useState(null);
+  const [editName, setEditName] = useState('');
+
   useEffect(() => {
     const q = query(
       collection(firestore, 'broadcasts'),
@@ -33,12 +41,20 @@ const NewAttendanceScreen = ({ navigation, route }) => {
     );
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const now = Date.now();
       const broadcasts = await Promise.all(snapshot.docs.map(async (d) => {
         const data = d.data();
+
+        // Auto-stop if expired
+        if (data.expiresAt && data.expiresAt.toMillis() < now && data.isActive) {
+          await updateDoc(doc(firestore, 'broadcasts', d.id), { isActive: false, endedAt: Timestamp.now() });
+          return null; // Will be filtered out by next snapshot or locally
+        }
+
         const participantsSnapshot = await getDocs(collection(firestore, `broadcasts/${d.id}/participants`));
         return { id: d.id, ...data, participantCount: participantsSnapshot.size };
       }));
-      setActiveBroadcasts(broadcasts.sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate()));
+      setActiveBroadcasts(broadcasts.filter(b => b !== null).sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate()));
     });
 
     return () => unsubscribe();
@@ -72,9 +88,25 @@ const NewAttendanceScreen = ({ navigation, route }) => {
         isActive: false,
         endedAt: Timestamp.now(),
       });
-      Alert.alert('Success', 'Attendance ended');
+      showToast('Attendance ended');
     } catch (error) {
-      Alert.alert('Error', 'Failed to stop attendance');
+      showToast('Failed to stop attendance', 'error');
+    }
+  };
+
+  const updateBroadcastName = async () => {
+    if (!editName.trim() || !editingBroadcast) return;
+    try {
+      setLoading(true);
+      await updateDoc(doc(firestore, 'broadcasts', editingBroadcast.id), {
+        sessionName: editName.trim()
+      });
+      showToast('Name updated');
+      setEditModalVisible(false);
+    } catch (error) {
+      showToast('Failed to update name', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,8 +115,9 @@ const NewAttendanceScreen = ({ navigation, route }) => {
       try {
         setLoading(true);
         await deleteDoc(doc(firestore, 'broadcasts', broadcastId));
+        showToast('Record deleted');
       } catch (error) {
-        Alert.alert('Error', 'Failed to delete record');
+        showToast('Failed to delete record', 'error');
       } finally {
         setLoading(false);
       }
@@ -150,8 +183,17 @@ const NewAttendanceScreen = ({ navigation, route }) => {
         takenBy: user.uid,
         takenByName: teacherFullName,
         useLocation,
+        isManualOnly,
+        excludeFromSummary,
         broadcasterPlatform: getPlatformIdentifier(),
       };
+
+      if (timeLimit.trim()) {
+        const minutes = parseInt(timeLimit);
+        if (!isNaN(minutes) && minutes > 0) {
+          broadcastData.expiresAt = Timestamp.fromMillis(Date.now() + minutes * 60000);
+        }
+      }
 
       if (useLocation && location) {
         broadcastData.radiusMeters = radiusMeters;
@@ -179,6 +221,7 @@ const NewAttendanceScreen = ({ navigation, route }) => {
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchActiveBroadcasts} colors={[fluentColors.brand]} />}
         >
@@ -249,6 +292,61 @@ const NewAttendanceScreen = ({ navigation, route }) => {
                 </View>
               )}
 
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Time Limit (Minutes)</Text>
+                <TextInput
+                  value={timeLimit}
+                  onChangeText={setTimeLimit}
+                  keyboardType="numeric"
+                  style={styles.input}
+                  placeholder="e.g. 30 (Optional)"
+                  placeholderTextColor={fluentColors.neutralTertiary}
+                />
+                <Text style={styles.helperText}>Auto-stops attendance after this time</Text>
+              </View>
+
+              <View style={styles.switchContainer}>
+                <View style={styles.switchRow}>
+                  <View style={styles.switchLabel}>
+                    <Ionicons name="hand-right-outline" size={20} color={isManualOnly ? fluentColors.brand : fluentColors.neutralTertiary} />
+                    <Text style={[styles.switchText, isManualOnly && styles.switchTextActive]}>
+                      Manual Attendance Only
+                    </Text>
+                  </View>
+                  <Switch
+                    value={isManualOnly}
+                    onValueChange={setIsManualOnly}
+                    trackColor={{ false: fluentColors.neutralLighter, true: fluentColors.brandBackground }}
+                    thumbColor={isManualOnly ? fluentColors.brand : fluentColors.white}
+                  />
+                </View>
+                <Text style={styles.helperText}>
+                  {isManualOnly
+                    ? 'Students cannot self-join; you must add them'
+                    : 'Students can join via QR/Code/Nearby'}
+                </Text>
+              </View>
+
+              <View style={styles.switchContainer}>
+                <View style={styles.switchRow}>
+                  <View style={styles.switchLabel}>
+                    <Ionicons name="stats-chart-outline" size={20} color={excludeFromSummary ? fluentColors.warning : fluentColors.neutralTertiary} />
+                    <Text style={[styles.switchText, excludeFromSummary && styles.switchTextActive]}>
+                      Exclude from Summary
+                    </Text>
+                  </View>
+                  <Switch
+                    value={excludeFromSummary}
+                    onValueChange={setExcludeFromSummary}
+                    trackColor={{ false: fluentColors.neutralLighter, true: fluentColors.warningBackground }}
+                    thumbColor={excludeFromSummary ? fluentColors.warning : fluentColors.white}
+                  />
+                </View>
+                <Text style={styles.helperText}>
+                  This session won't count towards student attendance percentages.
+                </Text>
+              </View>
+
               <TouchableOpacity onPress={startAttendance} style={styles.startButton} disabled={loading}>
                 {loading ? (
                   <ActivityIndicator size="small" color={fluentColors.white} />
@@ -279,15 +377,22 @@ const NewAttendanceScreen = ({ navigation, route }) => {
                           <Text style={styles.activeMetaText}>{item.participantCount || 0} Joined</Text>
                         </View>
                       </View>
-                      <TouchableOpacity style={styles.stopBadge} onPress={() => stopBroadcast(item.id)}>
-                        <Text style={styles.stopBadgeText}>Stop</Text>
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity style={styles.editIconBadge} onPress={() => { setEditingBroadcast(item); setEditName(item.sessionName || ''); setEditModalVisible(true); }}>
+                          <Ionicons name="create-outline" size={16} color={fluentColors.brand} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.stopBadge} onPress={() => stopBroadcast(item.id)}>
+                          <Text style={styles.stopBadgeText}>Stop</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                     <View style={styles.activeActions}>
-                      <TouchableOpacity style={styles.activeActionButton} onPress={() => { setSelectedBroadcastForQR(item); setQrModalVisible(true); }}>
-                        <Ionicons name="qr-code-outline" size={18} color={fluentColors.success} />
-                        <Text style={styles.activeActionText}>QR</Text>
-                      </TouchableOpacity>
+                      {!item.isManualOnly && (
+                        <TouchableOpacity style={styles.activeActionButton} onPress={() => { setSelectedBroadcastForQR(item); setQrModalVisible(true); }}>
+                          <Ionicons name="qr-code-outline" size={18} color={fluentColors.success} />
+                          <Text style={styles.activeActionText}>QR</Text>
+                        </TouchableOpacity>
+                      )}
                       <TouchableOpacity style={styles.activeActionButton} onPress={() => navigation.navigate('ParticipantsView', { broadcastId: item.id, broadcastName: item.sessionName || courseCode, canEdit: true })}>
                         <Ionicons name="eye-outline" size={18} color={fluentColors.brand} />
                         <Text style={styles.activeActionText}>View</Text>
@@ -303,6 +408,29 @@ const NewAttendanceScreen = ({ navigation, route }) => {
           </View>
         </ScrollView>
       </View>
+
+      <Modal animationType="fade" transparent visible={editModalVisible} onRequestClose={() => setEditModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Session Name</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Ionicons name="close-outline" size={24} color={fluentColors.neutralSecondary} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Enter new session name"
+              autoFocus
+            />
+            <TouchableOpacity onPress={updateBroadcastName} style={styles.startButton}>
+              <Text style={styles.startButtonText}>Save Changes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Modal animationType="slide" transparent visible={qrModalVisible} onRequestClose={() => setQrModalVisible(false)}>
         <View style={styles.modalOverlay}>
@@ -336,7 +464,7 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, backgroundColor: fluentColors.neutralLightest },
   scrollContainer: { flex: 1, width: '100%' },
-  formWrapper: { width: '100%', maxWidth: 800, alignSelf: 'center' },
+  formWrapper: { width: '100%' },
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.m, backgroundColor: fluentColors.white,
@@ -386,6 +514,7 @@ const styles = StyleSheet.create({
   activeActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: fluentColors.neutralLightest, paddingHorizontal: 12, paddingVertical: 8, borderRadius: fluentRadius.m },
   activeActionText: { fontSize: 13, fontWeight: '600', color: fluentColors.neutralPrimary },
   activeDeleteButton: { marginLeft: 'auto', padding: 8 },
+  editIconBadge: { backgroundColor: fluentColors.brandBackground, padding: 8, borderRadius: fluentRadius.round },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { backgroundColor: fluentColors.white, borderRadius: fluentRadius.xl, padding: fluentSpacing.l, width: '85%', maxWidth: 400 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: fluentSpacing.l },
