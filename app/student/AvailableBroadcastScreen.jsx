@@ -98,14 +98,26 @@ const FindBroadcastScreen = ({ navigation, route }) => {
       const q = query(collection(firestore, 'broadcasts'), where('isActive', '==', true));
       const snapshot = await getDocs(q);
 
+      const now = Date.now();
+
       const qNew = query(collection(firestore, 'attendanceSessions'), where('status', '==', 'active'));
       const snapshotNew = await getDocs(qNew);
 
-      const oldBroadcasts = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        isNewSystem: false,
-      }));
+      const oldBroadcasts = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          isNewSystem: false,
+        }))
+        .filter((b) => {
+          if (b.expiresAt && b.expiresAt.toMillis() < now) {
+            return false;
+          }
+          if (b.isManualOnly) {
+            return false;
+          }
+          return true;
+        });
 
       const newSessions = await Promise.all(snapshotNew.docs.map(async (docSnap) => {
         const data = docSnap.data();
@@ -502,6 +514,7 @@ const FindBroadcastScreen = ({ navigation, route }) => {
           <FlatList
             data={filteredBroadcasts}
             keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => joinBroadcast(item.id, item)}

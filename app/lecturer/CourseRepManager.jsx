@@ -9,6 +9,7 @@ import {
   collection, getDocs, doc, addDoc, deleteDoc, updateDoc, query, where, Timestamp, getDoc,
 } from 'firebase/firestore';
 import { fluentColors, fluentSpacing, fluentRadius, fluentShadows } from '../../utils/fluentTheme';
+import { showToast } from '../components/Toast';
 
 const CourseRepManager = ({ navigation, route }) => {
   const { courseId, courseCode, courseName } = route.params;
@@ -123,8 +124,9 @@ const CourseRepManager = ({ navigation, route }) => {
       setLoading(true);
       await deleteDoc(doc(firestore, 'courseReps', repId));
       setReps((prev) => prev.filter((r) => r.id !== repId));
+      showToast('Course rep removed');
     } catch (error) {
-      Alert.alert('Error', 'Failed to remove course rep');
+      showToast('Failed to remove course rep', 'error');
     } finally {
       setLoading(false);
     }
@@ -177,6 +179,7 @@ const CourseRepManager = ({ navigation, route }) => {
         <FlatList
           data={reps}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[fluentColors.brand]} />
           }
@@ -327,11 +330,10 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: fluentColors.white,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: { flex: 1, backgroundColor: fluentColors.neutralLightest, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: fluentColors.neutralLightest },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: fluentColors.white },
   header: {
     width: '100%',
-    maxWidth: 800,
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: fluentSpacing.m,
     paddingVertical: fluentSpacing.m, backgroundColor: fluentColors.white,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '700', color: fluentColors.neutralPrimary },
   subtitle: { fontSize: 13, color: fluentColors.neutralSecondary, marginTop: 2 },
   addButton: { padding: 4 },
-  listContent: { width: '100%', maxWidth: 800, padding: fluentSpacing.m, paddingBottom: 100 },
+  listContent: { width: '100%', padding: fluentSpacing.m, paddingBottom: 100 },
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: fluentColors.neutralPrimary, marginTop: fluentSpacing.m },
   emptyText: { fontSize: 13, color: fluentColors.neutralSecondary, marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },

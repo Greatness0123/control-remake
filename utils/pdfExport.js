@@ -113,6 +113,8 @@ export const exportCoursePDF = async (courseId, courseCode, courseName) => {
   const sessions = [];
   for (const bDoc of courseBroadcasts) {
     const bData = bDoc.data();
+    if (bData.excludeFromSummary) continue;
+
     const participantsSnapshot = await getDocs(collection(firestore, `broadcasts/${bDoc.id}/participants`));
     const participants = participantsSnapshot.docs.map(d => d.data());
     sessions.push({

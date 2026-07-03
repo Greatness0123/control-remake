@@ -482,6 +482,7 @@ const LecturerDashboard = ({ navigation }) => {
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b82f6"]} />}
         >
           <View style={styles.headerContainer}>
@@ -796,8 +797,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
   },
   loadingContainer: {
     flex: 1,

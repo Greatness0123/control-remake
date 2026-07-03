@@ -6,8 +6,9 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { firestore } from '../../config/firebaseconfig';
 import { collection, getDocs, onSnapshot, deleteDoc, doc, addDoc, Timestamp, query, where } from 'firebase/firestore';
-import { getDoc } from 'firebase/firestore';
+import { getDoc, updateDoc } from 'firebase/firestore';
 import { fluentColors, fluentSpacing, fluentRadius, fluentShadows } from '../../utils/fluentTheme';
+import { showToast } from '../components/Toast';
 
 const ParticipantsView = ({ navigation, route }) => {
   const { broadcastId, broadcastName, userRole, userId, canEdit } = route.params;
@@ -170,8 +171,9 @@ const ParticipantsView = ({ navigation, route }) => {
       try {
         setLoading(true);
         await deleteDoc(doc(firestore, `broadcasts/${broadcastId}/participants`, participantId));
+        showToast(`Removed ${participantName}`);
       } catch (error) {
-        Alert.alert('Error', 'Failed to remove student');
+        showToast('Failed to remove student', 'error');
       } finally {
         setLoading(false);
       }
@@ -375,6 +377,7 @@ const ParticipantsView = ({ navigation, route }) => {
             data={filteredParticipants}
             renderItem={renderParticipantItem}
             keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
             refreshControl={
               <RefreshControl
@@ -433,27 +436,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: fluentColors.white },
   header: {
     width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16,
     borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
   },
   statsBar: {
     width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
     flexDirection: 'row', backgroundColor: fluentColors.neutralLightest, paddingVertical: 16,
     paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: fluentColors.neutralLighter,
   },
   searchContainer: {
     width: '100%',
-    maxWidth: 800,
-    alignSelf: 'center',
     flexDirection: 'row', alignItems: 'center', backgroundColor: fluentColors.neutralLightest,
     marginHorizontal: 20, marginVertical: 16, paddingHorizontal: 12, paddingVertical: 10,
     borderRadius: fluentRadius.m, borderWidth: 1, borderColor: fluentColors.neutralLighter,
   },
-  listContainer: { width: '100%', maxWidth: 800, paddingHorizontal: 20, paddingBottom: 20, alignSelf: 'center' },
+  listContainer: { width: '100%', paddingHorizontal: 20, paddingBottom: 20 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 16, color: fluentColors.neutralSecondary },
   header: {
